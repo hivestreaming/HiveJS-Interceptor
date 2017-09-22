@@ -13,7 +13,7 @@
  * original XMLHttpRequest
  */
 
-
+declare let HiveRequestFactory;
 
 class HiveProxyRequest {
     private parsedResponseHeaders = {};
@@ -34,9 +34,6 @@ class HiveProxyRequest {
     private innerXhr: any;
 
     constructor() {
-
-        Object.assign(this, HiveXMLHttpRequest);
-
         this.readyState = 0;
         this.status = 0;
         this.responseType = "";
@@ -60,6 +57,16 @@ class HiveProxyRequest {
             this.onreadystatechange({
                 currentTarget: this
             });
+
+        try {
+            // here we decide if we should handle it with HiveRequestFactory or internal XHR
+            if (typeof HiveRequestFactory !== 'undefined'){
+                this.internalopen(new HiveRequestFactory());
+            } else
+            this.internalopen(new HiveOriginalXMLHttpRequest());
+        } catch (e) {
+            console.error(e);
+        }
         console.info("OPEN: " + this.method + " " + this.url)
     };
 
@@ -94,7 +101,7 @@ class HiveProxyRequest {
         this.headers.push({ key: name, value: value });
     };
 
-    private internalSend(req, body) {
+    private internalopen(req) {
 
         req.open(this.method, this.url, this.sync, this.user, this.pass);
 
@@ -190,24 +197,10 @@ class HiveProxyRequest {
         }
 
         this.innerXhr = req;
-        req.send(body)
     }
 
     send(body) {
-
-        try {
-            // here we decide if we should handle it with HiveRequestFactory or internal XHR
-
-            // const stringUrl = this.url.toString();
-            // if (<CHECK>){
-            //     internalSend(new HiveXMLHttpRequest(), body);
-            // } else
-            this.internalSend(new HiveXMLHttpRequest(), body);
-
-        } catch (e) {
-            console.error(e);
-        }
-
+        this.innerXhr.send(body);
     };
 
 
@@ -237,5 +230,5 @@ class HiveProxyRequest {
 }
 
 // override normal XMLHttpRequest with our handler
-const HiveXMLHttpRequest = window['XMLHttpRequest'];
+const HiveOriginalXMLHttpRequest = window['XMLHttpRequest'];
 window['XMLHttpRequest'] = HiveProxyRequest;
