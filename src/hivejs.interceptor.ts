@@ -16,209 +16,201 @@
 declare let HiveRequestFactory;
 
 class HiveProxyRequest {
-    public parsedResponseHeaders = {};
-    public headers: any;
-    public responseHeaders: any;
-    public mimetype: any;
-    public pass: any;
-    public user: any;
-    public sync: any;
-    public url: any;
-    public method: any;
-    public readyState: number;
-    public timeout: any;
-    
-    public withCredentials: boolean;
-    public responseType: string;
-    public response: any;
-    public responseURL: string;
-    public responseXML: any;
-    public responseText: string;
+  public parsedResponseHeaders = {};
+  public headers: any;
+  public responseHeaders: any;
+  public mimetype: any;
+  public pass: any;
+  public user: any;
+  public sync: any;
+  public url: any;
+  public method: any;
+  public readyState: number;
+  public timeout: any;
 
-    public status: number;
-    public statusText: string;
-    public loaded: number;
+  public withCredentials: boolean;
+  public responseType: string;
+  public response: any;
+  public responseURL: string;
+  public responseXML: any;
+  public responseText: string;
 
-    private innerXhr: any;
+  public status: number;
+  public statusText: string;
+  public loaded: number;
 
-    constructor() {
-        this.readyState = 0;
-        this.status = 0;
-        this.responseType = "";
-        this.withCredentials = false;
-        this.timeout = undefined;
+  private innerXhr: any;
+
+  constructor() {
+    this.readyState = 0;
+    this.status = 0;
+    this.responseType = '';
+    this.withCredentials = false;
+    this.timeout = undefined;
+  }
+
+  // --------------------------- XMLHttpRequest signature methods ----------------------------//
+  public open(method, url, sync, user, pass) {
+    try {
+      // here we decide if we should handle it with HiveRequestFactory or internal XHR
+      if (typeof HiveRequestFactory !== 'undefined')
+        this.innerXhr = new HiveRequestFactory();
+      else this.innerXhr = new HiveOriginalXMLHttpRequest();
+      this.internalopen(method, url, sync, user, pass);
+    } catch (e) {
+      console.error(e);
+    }
+    console.info('OPEN: ' + this.method + ' ' + this.url);
+  }
+
+  overrideMimeType(mimeType) {
+    this.mimetype = mimeType;
+  }
+
+  getAllResponseHeaders() {
+    return this.responseHeaders;
+  }
+
+  getResponseHeader(header) {
+    if (!this.parsedResponseHeaders) {
+      // parse once all the headers into a map
+      if (this.responseHeaders) {
+        const lines = this.responseHeaders.split('\n');
+        lines.forEach(function(line) {
+          let keyValue = line.split(':');
+          this.parsedResponseHeaders[keyValue[0].trim()] = keyValue[1].trim();
+        });
+      }
     }
 
-    // --------------------------- XMLHttpRequest signature methods ----------------------------//
-    public open(method, url, sync, user, pass) {
+    return this.parsedResponseHeaders[header];
+  }
+
+  setRequestHeader(name, value) {
+    if (!this.headers) this.headers = [];
+    // console.info("HEADER " + name + " " + value);
+    this.headers.push({ key: name, value: value });
+  }
+
+  private internalopen(method, url, sync, user, pass) {
+    if (sync === void 0) {
+      sync = true;
+    }
+    this.method = method;
+    this.url = url;
+    this.sync = sync;
+    this.user = user;
+    this.pass = pass;
+
+    this.readyState = 1;
+    if (this.onreadystatechange)
+      this.onreadystatechange({
+        currentTarget: this,
+      });
+
+    this.innerXhr.open(this.method, this.url, this.sync, this.user, this.pass);
+
+    if (this.withCredentials) this.innerXhr.withCredentials = true;
+
+    if (this.headers) {
+      this.headers.forEach(function(elem) {
+        this.innerXhr.setRequestHeader(elem.key, elem.value);
+      });
+    }
+
+    if (this.responseType) this.innerXhr.responseType = this.responseType;
+
+    if (this.mimetype) this.innerXhr.overrideMimeType(this.mimetype);
+
+    if (this.timeout) this.innerXhr.timeout = this.timeout;
+
+    this.innerXhr.onreadystatechange = () => {
+      this.readyState = this.innerXhr.readyState;
+      if (this.onreadystatechange)
+        this.onreadystatechange({
+          currentTarget: this,
+        });
+
+      if (this.innerXhr.readyState === 4) {
         try {
-            // here we decide if we should handle it with HiveRequestFactory or internal XHR
-            if (typeof HiveRequestFactory !== 'undefined')
-                this.innerXhr = new HiveRequestFactory();
-            else
-                this.innerXhr = new HiveOriginalXMLHttpRequest();
-            this.internalopen(method, url, sync, user, pass);
-        } catch (e) {
-            console.error(e);
-        }
-        console.info("OPEN: " + this.method + " " + this.url)
-    };
+          const len = this.innerXhr.loaded;
+          this.status = this.innerXhr.status;
+          this.statusText = this.innerXhr.statusText;
+          this.responseHeaders = this.innerXhr.getAllResponseHeaders();
+          this.response = this.innerXhr.response;
+          this.responseURL = this.innerXhr.responseURL;
+          if (
+            this.innerXhr.responseType === '' ||
+            this.innerXhr.responseType === 'document'
+          )
+            this.responseXML = this.innerXhr.responseXML;
+          if (
+            this.innerXhr.responseType === '' ||
+            this.innerXhr.responseType === 'text'
+          )
+            this.responseText = this.innerXhr.responseText;
+          this.loaded = len;
 
-    overrideMimeType(mimeType) {
-        this.mimetype = mimeType;
-    }
-
-    getAllResponseHeaders() {
-        return this.responseHeaders;
-    };
-
-    getResponseHeader(header) {
-
-        if (!this.parsedResponseHeaders) {
-            // parse once all the headers into a map
-            if (this.responseHeaders) {
-                const lines = this.responseHeaders.split('\n');
-                lines.forEach(function (line) {
-                    let keyValue = line.split(':');
-                    this.parsedResponseHeaders[keyValue[0].trim()] = keyValue[1].trim();
-                });
-            }
-        }
-
-        return this.parsedResponseHeaders[header];
-    };
-
-    setRequestHeader(name, value) {
-        if (!this.headers)
-            this.headers = [];
-        // console.info("HEADER " + name + " " + value);
-        this.headers.push({ key: name, value: value });
-    };
-
-    private internalopen(method, url, sync, user, pass) {
-
-        if (sync === void 0) {
-            sync = true;
-        }
-        this.method = method;
-        this.url = url;
-        this.sync = sync;
-        this.user = user;
-        this.pass = pass;
-
-        this.readyState = 1;
-        if (this.onreadystatechange)
-            this.onreadystatechange({
-                currentTarget: this
+          if (this.onprogress)
+            this.onprogress({
+              lengthComputable: true,
+              loaded: len,
+              total: len,
             });
 
-        this.innerXhr.open(this.method, this.url, this.sync, this.user, this.pass);
+          if (this.onload)
+            this.onload({
+              type: 'load',
+              target: this,
+              currentTarget: this,
+              bubbles: false,
+              cancelable: false,
+              lengthComputable: false,
+              loaded: len,
+              total: len,
+            });
 
-        if (this.withCredentials)
-            this.innerXhr.withCredentials = true;
-
-        if (this.headers) {
-            this.headers.forEach(function (elem) {
-                this.innerXhr.setRequestHeader(elem.key, elem.value)
-            })
+          if (this.onloadend)
+            this.onloadend({
+              type: 'loadend',
+              target: this,
+              currentTarget: this,
+              bubbles: false,
+              cancelable: false,
+              lengthComputable: false,
+              loaded: len,
+              total: len,
+            });
+        } catch (e) {
+          console.warn(e);
         }
+      }
+    };
 
-        if (this.responseType)
-            this.innerXhr.responseType = this.responseType;
+    this.innerXhr.onerror = this.onerror;
+    this.innerXhr.onabort = this.onabort;
+    this.innerXhr.ontimeout = this.ontimeout;
+  }
 
-        if (this.mimetype)
-            this.innerXhr.overrideMimeType(this.mimetype);
+  send(body) {
+    this.innerXhr.send(body);
+  }
 
-        if (this.timeout)
-            this.innerXhr.timeout = this.timeout;
-
-        this.innerXhr.onreadystatechange = () => {
-
-            this.readyState = this.innerXhr.readyState;
-            if (this.onreadystatechange)
-                this.onreadystatechange({
-                    currentTarget: this
-                });
-
-            if (this.innerXhr.readyState === 4) {
-
-                try {
-                    const len = this.innerXhr.loaded;
-                    this.status = this.innerXhr.status;
-                    this.statusText = this.innerXhr.statusText;
-                    this.responseHeaders = this.innerXhr.getAllResponseHeaders();
-                    this.response = this.innerXhr.response;
-                    this.responseURL = this.innerXhr.responseURL;
-                    if (this.innerXhr.responseType === '' || this.innerXhr.responseType === 'document')
-                        this.responseXML = this.innerXhr.responseXML;
-                    if (this.innerXhr.responseType === '' || this.innerXhr.responseType === 'text')
-                        this.responseText = this.innerXhr.responseText;
-                    this.loaded = len;
-
-                    if (this.onprogress)
-                        this.onprogress({
-                            lengthComputable: true,
-                            loaded: len,
-                            total: len
-                        });
-
-                    if (this.onload)
-                        this.onload({
-                            type: "load",
-                            target: this,
-                            currentTarget: this,
-                            bubbles: false,
-                            cancelable: false,
-                            lengthComputable: false,
-                            loaded: len,
-                            total: len
-                        });
-
-                    if (this.onloadend)
-                        this.onloadend({
-                            type: "loadend",
-                            target: this,
-                            currentTarget: this,
-                            bubbles: false,
-                            cancelable: false,
-                            lengthComputable: false,
-                            loaded: len,
-                            total: len
-                        });
-                } catch (e) {
-                    console.warn(e);
-                }
-            }
-        };
-
-        this.innerXhr.onerror = this.onerror;
-        this.innerXhr.onabort = this.onabort;
-        this.innerXhr.ontimeout = this.ontimeout;
+  public abort() {
+    if (this.innerXhr) this.innerXhr.abort();
+    else {
+      // TODO handle abort for async request
     }
+  }
 
-    send(body) {
-        this.innerXhr.send(body);
-    };
-
-
-    public abort() {
-        if (this.innerXhr)
-            this.innerXhr.abort();
-        else {
-            // TODO handle abort for async request
-        }
-    };
-
-
-    // -------------------- PLAYER IMPLEMENTED CALLBACKS --------------- //
-    public onload(event: any) {};
-    public onloadend(event: any) {};
-    public onerror(event: any) {};
-    public onprogress(event: any) {};
-    public onreadystatechange(event: any) {};
-    public ontimeout(event: any) {};
-    public onabort(event) {};
-
+  // -------------------- PLAYER IMPLEMENTED CALLBACKS --------------- //
+  public onload(event: any) {}
+  public onloadend(event: any) {}
+  public onerror(event: any) {}
+  public onprogress(event: any) {}
+  public onreadystatechange(event: any) {}
+  public ontimeout(event: any) {}
+  public onabort(event) {}
 }
 
 // override normal XMLHttpRequest with our handler
