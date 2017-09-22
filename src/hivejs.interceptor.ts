@@ -16,20 +16,28 @@
 declare let HiveRequestFactory;
 
 class HiveProxyRequest {
-    private parsedResponseHeaders = {};
-    private headers: any;
-    private responseHeaders: any;
-    private mimetype: any;
-    private pass: any;
-    private user: any;
-    private sync: any;
-    private url: any;
-    private method: any;
-    private readyState: number;
-    private timeout: any;
-    private withCredentials: boolean;
-    private responseType: string;
-    private status: number;
+    public parsedResponseHeaders = {};
+    public headers: any;
+    public responseHeaders: any;
+    public mimetype: any;
+    public pass: any;
+    public user: any;
+    public sync: any;
+    public url: any;
+    public method: any;
+    public readyState: number;
+    public timeout: any;
+    
+    public withCredentials: boolean;
+    public responseType: string;
+    public response: any;
+    public responseURL: string;
+    public responseXML: any;
+    public responseText: string;
+
+    public status: number;
+    public statusText: string;
+    public loaded: number;
 
     private innerXhr: any;
 
@@ -43,27 +51,13 @@ class HiveProxyRequest {
 
     // --------------------------- XMLHttpRequest signature methods ----------------------------//
     public open(method, url, sync, user, pass) {
-        if (sync === void 0) {
-            sync = true;
-        }
-        this.method = method;
-        this.url = url;
-        this.sync = sync;
-        this.user = user;
-        this.pass = pass;
-
-        this.readyState = 1;
-        if (this.onreadystatechange)
-            this.onreadystatechange({
-                currentTarget: this
-            });
-
         try {
             // here we decide if we should handle it with HiveRequestFactory or internal XHR
-            if (typeof HiveRequestFactory !== 'undefined'){
-                this.internalopen(new HiveRequestFactory());
-            } else
-            this.internalopen(new HiveOriginalXMLHttpRequest());
+            if (typeof HiveRequestFactory !== 'undefined')
+                this.innerXhr = new HiveRequestFactory();
+            else
+                this.innerXhr = new HiveOriginalXMLHttpRequest();
+            this.internalopen(method, url, sync, user, pass);
         } catch (e) {
             console.error(e);
         }
@@ -101,49 +95,64 @@ class HiveProxyRequest {
         this.headers.push({ key: name, value: value });
     };
 
-    private internalopen(req) {
+    private internalopen(method, url, sync, user, pass) {
 
-        req.open(this.method, this.url, this.sync, this.user, this.pass);
+        if (sync === void 0) {
+            sync = true;
+        }
+        this.method = method;
+        this.url = url;
+        this.sync = sync;
+        this.user = user;
+        this.pass = pass;
+
+        this.readyState = 1;
+        if (this.onreadystatechange)
+            this.onreadystatechange({
+                currentTarget: this
+            });
+
+        this.innerXhr.open(this.method, this.url, this.sync, this.user, this.pass);
 
         if (this.withCredentials)
-            req.withCredentials = true;
+            this.innerXhr.withCredentials = true;
 
         if (this.headers) {
             this.headers.forEach(function (elem) {
-                req.setRequestHeader(elem.key, elem.value)
+                this.innerXhr.setRequestHeader(elem.key, elem.value)
             })
         }
 
         if (this.responseType)
-            req.responseType = this.responseType;
+            this.innerXhr.responseType = this.responseType;
 
         if (this.mimetype)
-            req.overrideMimeType(this.mimetype);
+            this.innerXhr.overrideMimeType(this.mimetype);
 
         if (this.timeout)
-            req.timeout = this.timeout;
+            this.innerXhr.timeout = this.timeout;
 
-        req.onreadystatechange = function () {
+        this.innerXhr.onreadystatechange = () => {
 
-            this.readyState = req.readyState;
+            this.readyState = this.innerXhr.readyState;
             if (this.onreadystatechange)
                 this.onreadystatechange({
                     currentTarget: this
                 });
 
-            if (req.readyState === 4) {
+            if (this.innerXhr.readyState === 4) {
 
                 try {
-                    const len = req.loaded;
-                    this.status = req.status;
-                    this.statusText = req.statusText;
-                    this.responseHeaders = req.getAllResponseHeaders();
-                    this.response = req.response;
-                    this.responseURL = req.responseURL;
-                    if (req.responseType === '' || req.responseType === 'document')
-                        this.responseXML = req.responseXML;
-                    if (req.responseType === '' || req.responseType === 'text')
-                        this.responseText = req.responseText;
+                    const len = this.innerXhr.loaded;
+                    this.status = this.innerXhr.status;
+                    this.statusText = this.innerXhr.statusText;
+                    this.responseHeaders = this.innerXhr.getAllResponseHeaders();
+                    this.response = this.innerXhr.response;
+                    this.responseURL = this.innerXhr.responseURL;
+                    if (this.innerXhr.responseType === '' || this.innerXhr.responseType === 'document')
+                        this.responseXML = this.innerXhr.responseXML;
+                    if (this.innerXhr.responseType === '' || this.innerXhr.responseType === 'text')
+                        this.responseText = this.innerXhr.responseText;
                     this.loaded = len;
 
                     if (this.onprogress)
@@ -182,21 +191,9 @@ class HiveProxyRequest {
             }
         };
 
-        req.onerror = function (event) {
-            if (this.onerror)
-                this.onerror(event);
-        };
-        req.onabort = function (event) {
-            if (this.onabort)
-                this.onabort(event);
-        };
-
-        req.ontimeout = function (event) {
-            if (this.ontimeout)
-                this.ontimeout(event);
-        }
-
-        this.innerXhr = req;
+        this.innerXhr.onerror = this.onerror;
+        this.innerXhr.onabort = this.onabort;
+        this.innerXhr.ontimeout = this.ontimeout;
     }
 
     send(body) {
@@ -214,18 +211,13 @@ class HiveProxyRequest {
 
 
     // -------------------- PLAYER IMPLEMENTED CALLBACKS --------------- //
-    public onload(event: any) {
-    };
-    public onloadend(event: any) {
-    };
-    public onerror(event: any) {
-    };
-    public onprogress(event: any) {
-    };
-    public onreadystatechange(event: any) {
-    };
-    public ontimeout(event: any) {
-    };
+    public onload(event: any) {};
+    public onloadend(event: any) {};
+    public onerror(event: any) {};
+    public onprogress(event: any) {};
+    public onreadystatechange(event: any) {};
+    public ontimeout(event: any) {};
+    public onabort(event) {};
 
 }
 

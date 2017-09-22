@@ -1,0 +1,29 @@
+<html>
+    <head>
+        <script src="../lib/hivejs.interceptor.js"></script>
+    </head>
+
+    <body>
+        
+        
+        <script>
+            let xhr = new XMLHttpRequest();
+
+            xhr.onreadystatechange = (event) => {
+                console.log('State Changed', event, event.currentTarget.readyState);
+            }
+
+            xhr.open('GET', '../lib/index.js');
+
+            xhr.onload((event) => {
+                
+                console.log('EVENT LOADED', event);
+
+            });
+
+            xhr.send();
+        </script>
+
+
+    </body>
+</html>
