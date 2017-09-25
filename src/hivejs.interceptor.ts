@@ -16,28 +16,29 @@
 declare let HiveRequestFactory;
 
 class HiveProxyRequest {
-  public parsedResponseHeaders = {};
-  public headers: any;
-  public responseHeaders: any;
-  public mimetype: any;
-  public pass: any;
-  public user: any;
-  public sync: any;
-  public url: any;
-  public method: any;
-  public readyState: number;
-  public timeout: any;
+  parsedResponseHeaders = {};
+  headers: any;
+  responseHeaders: any;
+  mimetype: any;
+  pass: any;
+  user: any;
+  sync: any;
+  url: any;
+  method: any;
+  readyState: number;
+  timeout: any;
 
-  public withCredentials: boolean;
-  public responseType: string;
-  public response: any;
-  public responseURL: string;
-  public responseXML: any;
-  public responseText: string;
+  withCredentials: boolean;
+  responseType: string;
+  response: any;
+  responseURL: string;
+  responseXML: any;
+  responseText: string;
+  type: string;
 
-  public status: number;
-  public statusText: string;
-  public loaded: number;
+  status: number;
+  statusText: string;
+  loaded: number;
 
   private innerXhr: any;
 
@@ -47,15 +48,20 @@ class HiveProxyRequest {
     this.responseType = '';
     this.withCredentials = false;
     this.timeout = undefined;
+    this.type = '';
   }
 
   // --------------------------- XMLHttpRequest signature methods ----------------------------//
-  public open(method, url, sync, user, pass) {
+  open(method, url, sync, user, pass) {
     try {
       // here we decide if we should handle it with HiveRequestFactory or internal XHR
-      if (typeof HiveRequestFactory !== 'undefined')
+      if (
+        typeof HiveRequestFactory !== 'undefined' &&
+        this.isVideoData(this.getBaseUrl(url.toLowerCase()))
+      ) {
         this.innerXhr = new HiveRequestFactory();
-      else this.innerXhr = new HiveOriginalXMLHttpRequest();
+        console.info('USING HiveRequestFactory', this.innerXhr);
+      } else this.innerXhr = new HiveOriginalXMLHttpRequest();
       this.internalopen(method, url, sync, user, pass);
     } catch (e) {
       console.error(e);
@@ -77,7 +83,7 @@ class HiveProxyRequest {
       if (this.responseHeaders) {
         const lines = this.responseHeaders.split('\n');
         lines.forEach(function(line) {
-          let keyValue = line.split(':');
+          const keyValue = line.split(':');
           this.parsedResponseHeaders[keyValue[0].trim()] = keyValue[1].trim();
         });
       }
@@ -89,8 +95,40 @@ class HiveProxyRequest {
   setRequestHeader(name, value) {
     if (!this.headers) this.headers = [];
     // console.info("HEADER " + name + " " + value);
-    this.headers.push({ key: name, value: value });
+    this.headers.push({ key: name, value });
   }
+
+  send(body) {
+    if (this.withCredentials) this.innerXhr.withCredentials = true;
+
+    if (this.responseType) this.innerXhr.responseType = this.responseType;
+
+    if (this.mimetype) this.innerXhr.overrideMimeType(this.mimetype);
+
+    if (this.timeout) this.innerXhr.timeout = this.timeout;
+
+    if (this.type) this.innerXhr.type = this.type;
+
+    this.innerXhr.send(body);
+  }
+
+  abort() {
+    if (this.innerXhr) this.innerXhr.abort();
+    else {
+      // TODO handle abort for async request
+    }
+  }
+
+  // -------------------- PLAYER IMPLEMENTED CALLBACKS --------------- //
+  onload(event: any) {}
+  onloadend(event: any) {}
+  onerror(event: any) {}
+  onprogress(event: any) {}
+  onreadystatechange(event: any) {}
+  ontimeout(event: any) {}
+  onabort(event) {}
+
+  // -------------------- PRIVATE CUSTOM METHODS ------ --------------- //
 
   private internalopen(method, url, sync, user, pass) {
     if (sync === void 0) {
@@ -110,19 +148,11 @@ class HiveProxyRequest {
 
     this.innerXhr.open(this.method, this.url, this.sync, this.user, this.pass);
 
-    if (this.withCredentials) this.innerXhr.withCredentials = true;
-
     if (this.headers) {
       this.headers.forEach(function(elem) {
         this.innerXhr.setRequestHeader(elem.key, elem.value);
       });
     }
-
-    if (this.responseType) this.innerXhr.responseType = this.responseType;
-
-    if (this.mimetype) this.innerXhr.overrideMimeType(this.mimetype);
-
-    if (this.timeout) this.innerXhr.timeout = this.timeout;
 
     this.innerXhr.onreadystatechange = () => {
       this.readyState = this.innerXhr.readyState;
@@ -192,25 +222,15 @@ class HiveProxyRequest {
     this.innerXhr.ontimeout = this.ontimeout;
   }
 
-  send(body) {
-    this.innerXhr.send(body);
+  private getBaseUrl(url: string) {
+    const matches = url.match(/.+?(?=\?|$)/i);
+    if (matches.length > 0) return matches[0];
+    return null;
   }
 
-  public abort() {
-    if (this.innerXhr) this.innerXhr.abort();
-    else {
-      // TODO handle abort for async request
-    }
+  private isVideoData(url: string): boolean {
+    return url && (url.endsWith('.m3u8') || url.endsWith('.ts'));
   }
-
-  // -------------------- PLAYER IMPLEMENTED CALLBACKS --------------- //
-  public onload(event: any) {}
-  public onloadend(event: any) {}
-  public onerror(event: any) {}
-  public onprogress(event: any) {}
-  public onreadystatechange(event: any) {}
-  public ontimeout(event: any) {}
-  public onabort(event) {}
 }
 
 // override normal XMLHttpRequest with our handler

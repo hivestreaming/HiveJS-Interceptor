@@ -1,7 +1,15 @@
 {
   "extends": [
     "tslint:latest",
-    "tslint-config-prettier",
-    "disable-next-line:curly"
-  ]
+    "tslint-config-prettier"
+  ],
+  "rules": {
+    "curly": false,
+    "prefer-conditional-expression": false,
+    "no-console": false,
+    "member-access": [true, "no-public"],
+    "no-empty": false,
+    "object-literal-sort-keys": false,
+    "no-string-literal": false
+  }
 }
