@@ -7,7 +7,7 @@
  Override XMLHttpRequest with HiveXMLHttpRequest
  HiveXMLHttpRequest implements the same API, and evaluates the requested url.
  If the url matches a live video (metadata, audio, video)
- it will forward the request to the content script through postMessage api.
+ it will forward the request to the content script through Hive Plugin.
  
  If the request is not a live video, it will be resolved using the
  original XMLHttpRequest

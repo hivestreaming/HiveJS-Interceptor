@@ -1,7 +1,3 @@
-/**
- * Created by rick on 2017-09-05.
- */
-
 /** ======================= XHR INTERCEPT =========================
  *
  * Override XMLHttpRequest with HiveXMLHttpRequest
