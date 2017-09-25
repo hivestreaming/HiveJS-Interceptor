@@ -4,12 +4,12 @@
 
 /** ======================= XHR INTERCEPT =========================
  *
- * Override XMLHttpRequest with HiveProxyRequest
- * HiveProxyRequest implements the same API, and evaluates the requested url.
- * If the url matches a facebook live video (metadata, audio, video)
+ * Override XMLHttpRequest with HiveXMLHttpRequest
+ * HiveXMLHttpRequest implements the same API, and evaluates the requested url.
+ * If the url matches a live video (metadata, audio, video)
  * it will forward the request to the content script through postMessage api.
  *
- * If the request is not a facebook live video, it will be resolved using the
+ * If the request is not a live video, it will be resolved using the
  * original XMLHttpRequest
  */
 
