@@ -15,7 +15,7 @@
 
 declare let HiveRequestFactory;
 
-class HiveProxyRequest {
+class HiveXMLHttpRequest {
   parsedResponseHeaders = {};
   headers: any;
   responseHeaders: any;
@@ -235,4 +235,4 @@ class HiveProxyRequest {
 
 // override normal XMLHttpRequest with our handler
 const HiveOriginalXMLHttpRequest = window['XMLHttpRequest'];
-window['XMLHttpRequest'] = HiveProxyRequest;
+window['XMLHttpRequest'] = HiveXMLHttpRequest;
