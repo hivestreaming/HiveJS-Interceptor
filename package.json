@@ -28,13 +28,19 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@types/node": "^7.0.10",
     "mocha": "^3.5.3",
+    "path": "^0.12.7",
     "prettier": "^1.5.2",
     "rimraf": "^2.0.0",
+    "ts-loader": "^2.3.7",
     "ts-node": "^3.2.0",
     "tslint": "^5.0.0",
     "tslint-config-prettier": "^1.1.0",
-    "typescript": "2.1.5"
+    "typescript": "2.1.5",
+    "uglifyjs-webpack-plugin": "^0.4.6",
+    "urijs": "^1.18.12",
+    "webpack": "^3.6.0"
   },
   "engines": {
     "node": "6.11.2"

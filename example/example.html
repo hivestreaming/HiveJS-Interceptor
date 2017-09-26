@@ -1,6 +1,7 @@
 <html>
     <head>
         <script src="../lib/hivejs.interceptor.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.5/require.min.js"></script>
     </head>
 
     <body>
@@ -13,7 +14,7 @@
                 console.log('State Changed', event, event.currentTarget.readyState);
             }
 
-            xhr.open('GET', '../lib/index.js');
+            xhr.open('GET', 'http://ciaone.ciao.com/ciaociao/eeeeh.html?test=http://ams-live.hivestreaming.com/manifest.m3u8');
 
             xhr.onload((event) => {
                 

@@ -10,6 +10,7 @@
     "member-access": [true, "no-public"],
     "no-empty": false,
     "object-literal-sort-keys": false,
-    "no-string-literal": false
+    "no-string-literal": false,
+    "no-reference": false
   }
 }

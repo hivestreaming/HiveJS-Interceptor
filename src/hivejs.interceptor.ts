@@ -1,3 +1,4 @@
+const URI = require('urijs');
 /** ======================= XHR INTERCEPT =========================
  *
  * Override XMLHttpRequest with HiveXMLHttpRequest
@@ -10,8 +11,12 @@
  */
 
 declare let HiveRequestFactory;
+declare let DATA_EXTENTION;
+declare let METADATA_EXTENTION;
 
-// Implementing for now the XMLHttpRequest interface 
+console.warn(`GENERATING HIVE XHR INTERCEPTOR WITH PARAMTERS: METADATA_EXTENTION ${METADATA_EXTENTION} DATA_EXTENTION ${DATA_EXTENTION}`)
+
+// Implementing for now the XMLHttpRequest interface
 // in order to fix any compliance issue
 class HiveXMLHttpRequest implements XMLHttpRequest {
   // ---------- XHR Constants ---------/
@@ -62,9 +67,10 @@ class HiveXMLHttpRequest implements XMLHttpRequest {
   open(method, url, sync, user, pass) {
     try {
       // here we decide if we should handle it with HiveRequestFactory or internal XHR
+      const uri = new URI(url);
       if (
         typeof HiveRequestFactory !== 'undefined' &&
-        this.isVideoData(this.getBaseUrl(url.toLowerCase()))
+        this.isVideoData(uri.origin() + uri.pathname())
       ) {
         this.innerXhr = new HiveRequestFactory();
         console.info('USING HiveRequestFactory', this.innerXhr);
@@ -243,15 +249,9 @@ class HiveXMLHttpRequest implements XMLHttpRequest {
     this.innerXhr.ontimeout = this.ontimeout;
   }
 
-  private getBaseUrl(url: string) {
-    const matches = url.match(/.+?(?=\?|$)/i);
-    if (matches.length > 0) return matches[0];
-    return null;
-  }
-
   private isVideoData(url: string): boolean {
-    const metadataExt: string = '.m3u8';
-    const dataExt: string = '.ts';
+    const metadataExt: string = METADATA_EXTENTION;
+    const dataExt: string = DATA_EXTENTION;
     return (
       url &&
       (url.indexOf(metadataExt, url.length - metadataExt.length) >= 0 ||
