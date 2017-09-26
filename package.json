@@ -1,9 +1,9 @@
 {
   "name": "hive-js-interceptor",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "hive-js-interceptor",
   "license": "MIT",
-  "repository": "",
+  "repository": "https://github.com/Peerialism/HiveJS-Interceptor",
   "author": {
     "name": "",
     "email": "",
@@ -26,7 +26,9 @@
     "build": "tsc --pretty",
     "watch": "npm run build -- --watch"
   },
-  "dependencies": {},
+  "dependencies": {
+    "urijs": "^1.18.12"
+  },
   "devDependencies": {
     "@types/node": "^7.0.10",
     "mocha": "^3.5.3",
@@ -39,7 +41,6 @@
     "tslint-config-prettier": "^1.1.0",
     "typescript": "2.1.5",
     "uglifyjs-webpack-plugin": "^0.4.6",
-    "urijs": "^1.18.12",
     "webpack": "^3.6.0"
   },
   "engines": {
