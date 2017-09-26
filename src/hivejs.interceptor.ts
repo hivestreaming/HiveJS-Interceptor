@@ -12,6 +12,13 @@
 declare let HiveRequestFactory;
 
 class HiveXMLHttpRequest {
+  // -------------------  XHR Constants ---------------- //
+  static DONE: number = XMLHttpRequest.DONE;
+  static HEADERS_RECEIVED: number = XMLHttpRequest.HEADERS_RECEIVED;
+  static LOADING: number = XMLHttpRequest.LOADING;
+  static OPENED: number = XMLHttpRequest.OPENED;
+  static UNSENT: number = XMLHttpRequest.UNSENT;
+
   parsedResponseHeaders = {};
   headers: any;
   responseHeaders: any;
@@ -23,9 +30,11 @@ class HiveXMLHttpRequest {
   method: any;
   readyState: number;
   timeout: any;
+  upload: XMLHttpRequestUpload;
+  msCachingEnabled: () => boolean;
 
   withCredentials: boolean;
-  responseType: string;
+  responseType: any;
   response: any;
   responseURL: string;
   responseXML: any;
@@ -39,7 +48,7 @@ class HiveXMLHttpRequest {
   private innerXhr: any;
 
   constructor() {
-    this.readyState = 0;
+    this.readyState = HiveXMLHttpRequest.UNSENT;
     this.status = 0;
     this.responseType = '';
     this.withCredentials = false;
@@ -115,8 +124,17 @@ class HiveXMLHttpRequest {
     }
   }
 
+  addEventListener() {}
+
+  dispatchEvent(event: Event): boolean {
+    return false;
+  }
+
+  removeEventListener() {}
+
   // -------------------- PLAYER IMPLEMENTED CALLBACKS --------------- //
   onload(event: any) {}
+  onloadstart(event: any) {}
   onloadend(event: any) {}
   onerror(event: any) {}
   onprogress(event: any) {}
@@ -136,7 +154,7 @@ class HiveXMLHttpRequest {
     this.user = user;
     this.pass = pass;
 
-    this.readyState = 1;
+    this.readyState = HiveXMLHttpRequest.OPENED;
     if (this.onreadystatechange)
       this.onreadystatechange({
         currentTarget: this,
@@ -157,7 +175,7 @@ class HiveXMLHttpRequest {
           currentTarget: this,
         });
 
-      if (this.innerXhr.readyState === 4) {
+      if (this.innerXhr.readyState === HiveXMLHttpRequest.DONE) {
         try {
           const len = this.innerXhr.loaded;
           this.status = this.innerXhr.status;
@@ -225,10 +243,16 @@ class HiveXMLHttpRequest {
   }
 
   private isVideoData(url: string): boolean {
-    return url && (url.endsWith('.m3u8') || url.endsWith('.ts'));
+    const metadataExt: string = '.m3u8';
+    const dataExt: string = '.ts';
+    return (
+      url &&
+      (url.indexOf(metadataExt, url.length - metadataExt.length) >= 0 ||
+        url.indexOf(dataExt, url.length - dataExt.length) >= 0)
+    );
   }
 }
 
 // override normal XMLHttpRequest with our handler
-const HiveOriginalXMLHttpRequest = window['XMLHttpRequest'];
-window['XMLHttpRequest'] = HiveXMLHttpRequest;
+const HiveOriginalXMLHttpRequest = XMLHttpRequest;
+XMLHttpRequest = HiveXMLHttpRequest;
