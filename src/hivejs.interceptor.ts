@@ -11,14 +11,17 @@
 
 declare let HiveRequestFactory;
 
-class HiveXMLHttpRequest {
-  // -------------------  XHR Constants ---------------- //
-  static DONE: number = XMLHttpRequest.DONE;
-  static HEADERS_RECEIVED: number = XMLHttpRequest.HEADERS_RECEIVED;
-  static LOADING: number = XMLHttpRequest.LOADING;
-  static OPENED: number = XMLHttpRequest.OPENED;
-  static UNSENT: number = XMLHttpRequest.UNSENT;
+// Implementing for now the XMLHttpRequest interface 
+// in order to fix any compliance issue
+class HiveXMLHttpRequest implements XMLHttpRequest {
+  // ---------- XHR Constants ---------/
+  readonly DONE: number = 4;
+  readonly HEADERS_RECEIVED: number = 3;
+  readonly LOADING: number = 2;
+  readonly OPENED: number = 1;
+  readonly UNSENT: number = 0;
 
+  msCaching?: string;
   parsedResponseHeaders = {};
   headers: any;
   responseHeaders: any;
@@ -31,7 +34,6 @@ class HiveXMLHttpRequest {
   readyState: number;
   timeout: any;
   upload: XMLHttpRequestUpload;
-  msCachingEnabled: () => boolean;
 
   withCredentials: boolean;
   responseType: any;
@@ -48,7 +50,7 @@ class HiveXMLHttpRequest {
   private innerXhr: any;
 
   constructor() {
-    this.readyState = HiveXMLHttpRequest.UNSENT;
+    this.readyState = this.UNSENT;
     this.status = 0;
     this.responseType = '';
     this.withCredentials = false;
@@ -124,6 +126,7 @@ class HiveXMLHttpRequest {
     }
   }
 
+  // ----------------  Other XHR methods not used for now -------------- //
   addEventListener() {}
 
   dispatchEvent(event: Event): boolean {
@@ -131,6 +134,10 @@ class HiveXMLHttpRequest {
   }
 
   removeEventListener() {}
+
+  msCachingEnabled(): boolean {
+    return false;
+  }
 
   // -------------------- PLAYER IMPLEMENTED CALLBACKS --------------- //
   onload(event: any) {}
@@ -142,7 +149,7 @@ class HiveXMLHttpRequest {
   ontimeout(event: any) {}
   onabort(event) {}
 
-  // -------------------- PRIVATE CUSTOM METHODS ------ --------------- //
+  // -------------------- PRIVATE CUSTOM METHODS ---------------------- //
 
   private internalopen(method, url, sync, user, pass) {
     if (sync === void 0) {
@@ -154,7 +161,7 @@ class HiveXMLHttpRequest {
     this.user = user;
     this.pass = pass;
 
-    this.readyState = HiveXMLHttpRequest.OPENED;
+    this.readyState = this.OPENED;
     if (this.onreadystatechange)
       this.onreadystatechange({
         currentTarget: this,
@@ -175,7 +182,7 @@ class HiveXMLHttpRequest {
           currentTarget: this,
         });
 
-      if (this.innerXhr.readyState === HiveXMLHttpRequest.DONE) {
+      if (this.innerXhr.readyState === this.DONE) {
         try {
           const len = this.innerXhr.loaded;
           this.status = this.innerXhr.status;
@@ -254,5 +261,5 @@ class HiveXMLHttpRequest {
 }
 
 // override normal XMLHttpRequest with our handler
-const HiveOriginalXMLHttpRequest = XMLHttpRequest;
-XMLHttpRequest = HiveXMLHttpRequest;
+const HiveOriginalXMLHttpRequest = window['XMLHttpRequest'];
+window['XMLHttpRequest'] = HiveXMLHttpRequest;
