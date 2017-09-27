@@ -11,8 +11,17 @@ const URI = require('urijs');
  */
 
 declare let HiveRequestFactory;
-declare let DATA_EXTENTION;
-declare let METADATA_EXTENTION;
+declare var DATA_EXTENTION: string;
+declare var METADATA_EXTENTION: string;
+
+if (typeof DATA_EXTENTION === 'undefined') {
+  /* tslint:disable-next-line:no-var-keyword no-duplicate-variable prefer-const */
+  var DATA_EXTENTION = '.ts';
+}
+if (typeof METADATA_EXTENTION === 'undefined') {
+  /* tslint:disable-next-line:no-var-keyword no-duplicate-variable prefer-const */
+  var METADATA_EXTENTION = '.m3u8';
+}
 
 console.warn(
   `GENERATING HIVE XHR INTERCEPTOR WITH PARAMTERS: METADATA_EXTENTION ${METADATA_EXTENTION} DATA_EXTENTION ${DATA_EXTENTION}`
@@ -20,7 +29,7 @@ console.warn(
 
 // Implementing for now the XMLHttpRequest interface
 // in order to fix any compliance issue
-class HiveXMLHttpRequest implements XMLHttpRequest {
+export class HiveXMLHttpRequest implements XMLHttpRequest {
   // ---------- XHR Constants ---------/
   readonly DONE: number = 4;
   readonly HEADERS_RECEIVED: number = 3;
@@ -28,12 +37,11 @@ class HiveXMLHttpRequest implements XMLHttpRequest {
   readonly OPENED: number = 1;
   readonly UNSENT: number = 0;
 
-
-  // --------------- XHR Properties ---------------- // 
+  // --------------- XHR Properties ---------------- //
   readyState: number;
   response: any;
   responseText: string;
-  responseType: XMLHttpRequestResponseType;
+  responseType: any;
   responseURL: string;
   responseXML: Document;
   status: number;
@@ -67,7 +75,8 @@ class HiveXMLHttpRequest implements XMLHttpRequest {
   }
 
   // --------------------------- XMLHttpRequest signature methods ----------------------------//
-  open(method, url, sync, user, pass) {
+  // reference: https://xhr.spec.whatwg.org/#the-open()-method
+  open(method, url, sync = true, user = null, pass = null) {
     try {
       // here we decide if we should handle it with HiveRequestFactory or internal XHR
       const uri = new URI(url);
@@ -135,7 +144,11 @@ class HiveXMLHttpRequest implements XMLHttpRequest {
     }
   }
 
-  // ----------------  Other XHR methods not used for now -------------- //
+  msCachingEnabled(): boolean {
+    return typeof this.msCaching !== 'undefined';
+  }
+
+  // ----------------  Other XHR methods inheritated by EventTarget -------------- //
   addEventListener() {}
 
   dispatchEvent(event: Event): boolean {
@@ -143,10 +156,6 @@ class HiveXMLHttpRequest implements XMLHttpRequest {
   }
 
   removeEventListener() {}
-
-  msCachingEnabled(): boolean {
-    return false;
-  }
 
   // -------------------- PLAYER IMPLEMENTED CALLBACKS --------------- //
   onload(event: any) {}
@@ -264,5 +273,8 @@ class HiveXMLHttpRequest implements XMLHttpRequest {
 }
 
 // override normal XMLHttpRequest with our handler
-const HiveOriginalXMLHttpRequest = window['XMLHttpRequest'];
-window['XMLHttpRequest'] = HiveXMLHttpRequest;
+let HiveOriginalXMLHttpRequest = null;
+if (typeof window !== 'undefined') {
+  HiveOriginalXMLHttpRequest = window['XMLHttpRequest'];
+  window['XMLHttpRequest'] = HiveXMLHttpRequest;
+}
