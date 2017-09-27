@@ -14,7 +14,9 @@ declare let HiveRequestFactory;
 declare let DATA_EXTENTION;
 declare let METADATA_EXTENTION;
 
-console.warn(`GENERATING HIVE XHR INTERCEPTOR WITH PARAMTERS: METADATA_EXTENTION ${METADATA_EXTENTION} DATA_EXTENTION ${DATA_EXTENTION}`)
+console.warn(
+  `GENERATING HIVE XHR INTERCEPTOR WITH PARAMTERS: METADATA_EXTENTION ${METADATA_EXTENTION} DATA_EXTENTION ${DATA_EXTENTION}`
+);
 
 // Implementing for now the XMLHttpRequest interface
 // in order to fix any compliance issue
@@ -26,7 +28,22 @@ class HiveXMLHttpRequest implements XMLHttpRequest {
   readonly OPENED: number = 1;
   readonly UNSENT: number = 0;
 
+
+  // --------------- XHR Properties ---------------- // 
+  readyState: number;
+  response: any;
+  responseText: string;
+  responseType: XMLHttpRequestResponseType;
+  responseURL: string;
+  responseXML: Document;
+  status: number;
+  statusText: string;
+  timeout: number;
+  upload: XMLHttpRequestUpload;
+  withCredentials: boolean;
   msCaching?: string;
+
+  // ---------------- Custom Properties --------------//
   parsedResponseHeaders = {};
   headers: any;
   responseHeaders: any;
@@ -36,22 +53,8 @@ class HiveXMLHttpRequest implements XMLHttpRequest {
   sync: any;
   url: any;
   method: any;
-  readyState: number;
-  timeout: any;
-  upload: XMLHttpRequestUpload;
-
-  withCredentials: boolean;
-  responseType: any;
-  response: any;
-  responseURL: string;
-  responseXML: any;
-  responseText: string;
   type: string;
-
-  status: number;
-  statusText: string;
   loaded: number;
-
   private innerXhr: any;
 
   constructor() {
