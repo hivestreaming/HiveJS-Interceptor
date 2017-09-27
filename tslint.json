@@ -11,6 +11,7 @@
     "no-empty": false,
     "object-literal-sort-keys": false,
     "no-string-literal": false,
-    "no-reference": false
+    "no-reference": false,
+    "no-var-requires": false
   }
 }

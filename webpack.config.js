@@ -9,7 +9,7 @@ module.exports = env => {
     return {
         entry: './src/hivejs.interceptor.ts',
         output:{
-            path: path.resolve(__dirname, 'lib'),
+            path: path.resolve(__dirname, 'dist'),
             filename: 'hivejs.interceptor.js'
         },
         module: {
