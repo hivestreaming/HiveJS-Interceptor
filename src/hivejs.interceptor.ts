@@ -15,17 +15,13 @@ declare let HiveRequestFactory;
 declare var DATA_EXTENTION: string;
 declare var METADATA_EXTENTION: string;
 
-if (typeof DATA_EXTENTION === 'undefined') {
-  /* tslint:disable-next-line:no-var-keyword no-duplicate-variable prefer-const */
-  var DATA_EXTENTION = '.ts';
-}
-if (typeof METADATA_EXTENTION === 'undefined') {
-  /* tslint:disable-next-line:no-var-keyword no-duplicate-variable prefer-const */
-  var METADATA_EXTENTION = '.m3u8';
+const StreamingData = {
+  DATA_EXTENTION: typeof DATA_EXTENTION !== 'undefined' ? DATA_EXTENTION : '.ts',
+  METADATA_EXTENTION: typeof METADATA_EXTENTION !== 'undefined' ? METADATA_EXTENTION : '.ts'
 }
 
 console.warn(
-  `GENERATING HIVE XHR INTERCEPTOR WITH PARAMTERS: METADATA_EXTENTION ${METADATA_EXTENTION} DATA_EXTENTION ${DATA_EXTENTION}`
+  `GENERATING HIVE XHR INTERCEPTOR WITH PARAMTERS: METADATA_EXTENTION ${StreamingData.METADATA_EXTENTION} DATA_EXTENTION ${StreamingData.DATA_EXTENTION}`
 );
 
 // Implementing for now the XMLHttpRequest interface
@@ -33,8 +29,8 @@ console.warn(
 export class HiveXMLHttpRequest implements XMLHttpRequest {
   // ---------- XHR Constants ---------/
   readonly DONE: number = 4;
-  readonly HEADERS_RECEIVED: number = 3;
-  readonly LOADING: number = 2;
+  readonly LOADING: number = 3;
+  readonly HEADERS_RECEIVED: number = 2;
   readonly OPENED: number = 1;
   readonly UNSENT: number = 0;
 
@@ -263,8 +259,8 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   }
 
   private isVideoData(url: string): boolean {
-    const metadataExt: string = METADATA_EXTENTION;
-    const dataExt: string = DATA_EXTENTION;
+    const metadataExt: string = StreamingData.METADATA_EXTENTION;
+    const dataExt: string = StreamingData.DATA_EXTENTION;
     return (
       url &&
       (url.indexOf(metadataExt, url.length - metadataExt.length) >= 0 ||
@@ -273,7 +269,10 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   }
 }
 
-// override normal XMLHttpRequest with our handler
+
+// We are using these methods to override and recover the XMLHttpRequest default implementation, in this way we will need to use it just when a 
+// HiveU Web session is initialized
+
 function activateXHRInterceptor() {
   if (typeof window !== 'undefined') {
     window['HiveOriginalXMLHttpRequest'] = window['XMLHttpRequest'];
