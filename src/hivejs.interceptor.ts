@@ -1,5 +1,6 @@
 const URI = require('urijs');
-/** ======================= XHR INTERCEPT =========================
+/**
+ * ======================= XHR INTERCEPT =========================
  *
  * Override XMLHttpRequest with HiveXMLHttpRequest
  * HiveXMLHttpRequest implements the same API, and evaluates the requested url.
@@ -86,7 +87,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
       ) {
         this.innerXhr = new HiveRequestFactory();
         console.info('USING HiveRequestFactory', this.innerXhr);
-      } else this.innerXhr = new HiveOriginalXMLHttpRequest();
+      } else this.innerXhr = new window['HiveOriginalXMLHttpRequest']();
       this.internalopen(method, url, sync, user, pass);
     } catch (e) {
       console.error(e);
@@ -107,7 +108,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
       // parse once all the headers into a map
       if (this.responseHeaders) {
         const lines = this.responseHeaders.split('\n');
-        lines.forEach(function(line) {
+        lines.forEach(function (line) {
           const keyValue = line.split(':');
           this.parsedResponseHeaders[keyValue[0].trim()] = keyValue[1].trim();
         });
@@ -149,23 +150,23 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   }
 
   // ----------------  Other XHR methods inheritated by EventTarget -------------- //
-  addEventListener() {}
+  addEventListener() { }
 
   dispatchEvent(event: Event): boolean {
     return false;
   }
 
-  removeEventListener() {}
+  removeEventListener() { }
 
   // -------------------- PLAYER IMPLEMENTED CALLBACKS --------------- //
-  onload(event: any) {}
-  onloadstart(event: any) {}
-  onloadend(event: any) {}
-  onerror(event: any) {}
-  onprogress(event: any) {}
-  onreadystatechange(event: any) {}
-  ontimeout(event: any) {}
-  onabort(event) {}
+  onload(event: any) { }
+  onloadstart(event: any) { }
+  onloadend(event: any) { }
+  onerror(event: any) { }
+  onprogress(event: any) { }
+  onreadystatechange(event: any) { }
+  ontimeout(event: any) { }
+  onabort(event) { }
 
   // -------------------- PRIVATE CUSTOM METHODS ---------------------- //
 
@@ -188,7 +189,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     this.innerXhr.open(this.method, this.url, this.sync, this.user, this.pass);
 
     if (this.headers) {
-      this.headers.forEach(function(elem) {
+      this.headers.forEach(function (elem) {
         this.innerXhr.setRequestHeader(elem.key, elem.value);
       });
     }
@@ -273,8 +274,22 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
 }
 
 // override normal XMLHttpRequest with our handler
-let HiveOriginalXMLHttpRequest = null;
+function activateXHRInterceptor() {
+  if (typeof window !== 'undefined') {
+    window['HiveOriginalXMLHttpRequest'] = window['XMLHttpRequest'];
+    window['XMLHttpRequest'] = HiveXMLHttpRequest;
+  }
+}
+
+function deactivateXHRInterceptor() {
+  if (typeof window !== 'undefined' && window['HiveOriginalXMLHttpRequest']) {
+    window['XMLHttpRequest'] = window['HiveOriginalXMLHttpRequest'];
+  }
+}
+
 if (typeof window !== 'undefined') {
-  HiveOriginalXMLHttpRequest = window['XMLHttpRequest'];
-  window['XMLHttpRequest'] = HiveXMLHttpRequest;
+
+  window['activateXHRInterceptor'] = activateXHRInterceptor;
+  window['deactivateXHRInterceptor'] = deactivateXHRInterceptor;
+
 }
