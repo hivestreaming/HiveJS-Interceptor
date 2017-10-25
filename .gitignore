@@ -6,3 +6,4 @@ lib
 lib_test
 src/*.js
 dist/
+hive-js-interceptor-0.0.1.tgz
