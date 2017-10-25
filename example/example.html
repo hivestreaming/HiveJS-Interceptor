@@ -8,11 +8,27 @@
         
         
         <script>
-            activateXHRInterceptor();
-            let xhr = new XMLHttpRequest();
+            // activateXHRInterceptor();
+            var xhr = new XMLHttpRequest();
 
+            var objectsList = [];
+
+            // checking all the sages of the onreadystate change with the specific status of the XHR
             xhr.onreadystatechange = (event) => {
                 console.log('State Changed', event, event.currentTarget.readyState);
+                objectsList.push({
+                    readyState: xhr.readyState,
+                    response: xhr.response,
+                    responseText: xhr.responseText,
+                    responseType: xhr.responseType,
+                    responseURL: xhr.responseURL,
+                    responseXML: xhr.responseXML,
+                    status: xhr.status,
+                    statusText: xhr.statusText,
+                    timeout: xhr.timeout,
+                    upload: xhr.upload,
+                    withCredentials: xhr.withCredentials
+                });
             };
 
             xhr.onload = (event) => {
@@ -33,7 +49,7 @@
                 console.log('EVENT ERROR', event);
             };
 
-            // xhr.send();
+            xhr.send();
         </script>
 
 
