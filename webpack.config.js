@@ -3,8 +3,6 @@ var webpack = require('webpack');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = env => {
-    if(env.METADATA_EXTENTION === true) env.METADATA_EXTENTION = '.m3u8'
-    if(env.DATA_EXTENTION === true) env.DATA_EXTENTION = '.ts'
     console.log(`GENERATING HIVE XHR INTERCEPTOR WITH PARAMTERS: METADATA_EXTENTION ${env.METADATA_EXTENTION} DATA_EXTENTION ${env.DATA_EXTENTION}`)
     return {
         entry: './src/hivejs.interceptor.ts',

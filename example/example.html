@@ -8,21 +8,32 @@
         
         
         <script>
+            activateXHRInterceptor();
             let xhr = new XMLHttpRequest();
 
             xhr.onreadystatechange = (event) => {
                 console.log('State Changed', event, event.currentTarget.readyState);
-            }
+            };
 
-            xhr.open('GET', 'http://ciaone.ciao.com/ciaociao/eeeeh.html?test=http://ams-live.hivestreaming.com/manifest.m3u8');
-
-            xhr.onload((event) => {
-                
+            xhr.onload = (event) => {
                 console.log('EVENT LOADED', event);
+            };
 
-            });
+            xhr.onloadend = (event) => {
+                console.log('EVENT LOADEDEND', event);
+            };
+            
+            xhr.open('GET', 'http://ams-live.hivestreaming.com/manifest.m3u8');
 
-            xhr.send();
+            xhr.onloadstart = (event) => {
+                console.log('EVENT LOADEDSTART', event);
+            };
+
+            xhr.onerror = (event) => {
+                console.log('EVENT ERROR', event);
+            };
+
+            // xhr.send();
         </script>
 
 

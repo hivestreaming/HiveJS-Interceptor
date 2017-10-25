@@ -24,7 +24,7 @@
     "prepublish": "npm run build",
     "prebuild": "npm run clean && npm run format && npm run lint && echo Using TypeScript && tsc --version",
     "build": "tsc --pretty",
-    "pack": "./node_modules/.bin/webpack --env.METADATA_EXTENTION='.m3u8' --env.DATA_EXTENTION='.ts'",
+    "pack": "./node_modules/.bin/webpack --env.METADATA_EXTENTION=$METADATA_EXTENTION --env.DATA_EXTENTION=$DATA_EXTENTION",
     "watch": "npm run build -- --watch"
   },
   "dependencies": {
