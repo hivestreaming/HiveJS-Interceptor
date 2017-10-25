@@ -16,8 +16,8 @@ declare var DATA_EXTENTION: string;
 declare var METADATA_EXTENTION: string;
 
 const StreamingData = {
-  DATA_EXTENTION: typeof DATA_EXTENTION !== 'undefined' ? DATA_EXTENTION : '.ts',
-  METADATA_EXTENTION: typeof METADATA_EXTENTION !== 'undefined' ? METADATA_EXTENTION : '.ts'
+  METADATA_EXTENTION: typeof METADATA_EXTENTION !== 'undefined' && METADATA_EXTENTION !== '' ? METADATA_EXTENTION : '.m3u8',
+  DATA_EXTENTION: typeof DATA_EXTENTION !== 'undefined' && DATA_EXTENTION !== '' ? DATA_EXTENTION : '.ts'
 }
 
 console.warn(
@@ -67,7 +67,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     this.status = 0;
     this.responseType = '';
     this.withCredentials = false;
-    this.timeout = undefined;
+    this.timeout = 0;
     this.type = '';
   }
 
@@ -80,10 +80,11 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
       if (
         typeof HiveRequestFactory !== 'undefined' &&
         this.isVideoData(uri.origin() + uri.pathname())
-      ) {
-        this.innerXhr = new HiveRequestFactory();
-        console.info('USING HiveRequestFactory', this.innerXhr);
-      } else this.innerXhr = new window['HiveOriginalXMLHttpRequest']();
+      )
+        this.generateXHR('hive');
+      else 
+        this.generateXHR('original');
+      
       this.internalopen(method, url, sync, user, pass);
     } catch (e) {
       console.error(e);
@@ -155,47 +156,34 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   removeEventListener() { }
 
   // -------------------- PLAYER IMPLEMENTED CALLBACKS --------------- //
-  onload(event: any) { }
-  onloadstart(event: any) { }
-  onloadend(event: any) { }
+  onload(event: ProgressEvent) { }
+  onloadstart(event: ProgressEvent) { }
+  onloadend(event: ProgressEvent) { }
   onerror(event: any) { }
-  onprogress(event: any) { }
-  onreadystatechange(event: any) { }
-  ontimeout(event: any) { }
-  onabort(event) { }
+  onprogress(event: ProgressEvent) { }
+  ontimeout(event: ProgressEvent) { }
+  onabort(event: ProgressEvent) { }
+  onreadystatechange(event: Event) { }
 
   // -------------------- PRIVATE CUSTOM METHODS ---------------------- //
 
-  private internalopen(method, url, sync, user, pass) {
-    if (sync === void 0) {
-      sync = true;
+  private generateXHR(type: string) {
+
+    if(type === 'original'){
+      this.innerXhr = new window['HiveOriginalXMLHttpRequest']();
+      console.info('USING Original XMLHttpRequest', this.innerXhr);
     }
-    this.method = method;
-    this.url = url;
-    this.sync = sync;
-    this.user = user;
-    this.pass = pass;
-
-    this.readyState = this.OPENED;
-    if (this.onreadystatechange)
-      this.onreadystatechange({
-        currentTarget: this,
-      });
-
-    this.innerXhr.open(this.method, this.url, this.sync, this.user, this.pass);
-
-    if (this.headers) {
-      this.headers.forEach(function (elem) {
-        this.innerXhr.setRequestHeader(elem.key, elem.value);
-      });
+    else{
+      this.innerXhr = new HiveRequestFactory();
+      console.info('USING HiveRequestFactory', this.innerXhr);
     }
 
-    this.innerXhr.onreadystatechange = () => {
+    // Binding all the event handlers to the created XHR
+    this.innerXhr.onload = (event: ProgressEvent) => {
+      this.onload.call(this, event);
+    }
+    this.innerXhr.onreadystatechange = (event: ProgressEvent) => {
       this.readyState = this.innerXhr.readyState;
-      if (this.onreadystatechange)
-        this.onreadystatechange({
-          currentTarget: this,
-        });
 
       if (this.innerXhr.readyState === this.DONE) {
         try {
@@ -217,45 +205,57 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
             this.responseText = this.innerXhr.responseText;
           this.loaded = len;
 
-          if (this.onprogress)
-            this.onprogress({
-              lengthComputable: true,
-              loaded: len,
-              total: len,
-            });
-
-          if (this.onload)
-            this.onload({
-              type: 'load',
-              target: this,
-              currentTarget: this,
-              bubbles: false,
-              cancelable: false,
-              lengthComputable: false,
-              loaded: len,
-              total: len,
-            });
-
-          if (this.onloadend)
-            this.onloadend({
-              type: 'loadend',
-              target: this,
-              currentTarget: this,
-              bubbles: false,
-              cancelable: false,
-              lengthComputable: false,
-              loaded: len,
-              total: len,
-            });
+          // if (this.onprogress)
+          //   this.onprogress({
+          //     lengthComputable: true,
+          //     loaded: len,
+          //     total: len,
+          //   });
         } catch (e) {
           console.warn(e);
         }
       }
-    };
+      this.onreadystatechange.call(this, event);
+    }
+    this.innerXhr.onloadstart = (event: ProgressEvent) => {
+      this.onloadstart.call(this, event);
+    }
+    this.innerXhr.onloadend = (event: ProgressEvent) => {
+      this.onloadend.call(this, event);
+    }
+    this.innerXhr.onerror = (event: ProgressEvent) => {
+      this.onerror.call(this, event);
+    }
+    this.innerXhr.onprogress = (event: ProgressEvent) => {
+      this.onprogress.call(this, event);
+    }
+    this.innerXhr.ontimeout = (event: ProgressEvent) => {
+      this.ontimeout.call(this, event);
+    }
+    this.innerXhr.onabort = (event: ProgressEvent) => {
+      this.onabort.call(this, event);
+    }
+  }
 
-    this.innerXhr.onerror = this.onerror;
-    this.innerXhr.onabort = this.onabort;
-    this.innerXhr.ontimeout = this.ontimeout;
+  private internalopen(method, url, sync, user, pass) {
+    if (sync === void 0) {
+      sync = true;
+    }
+    this.method = method;
+    this.url = url;
+    this.sync = sync;
+    this.user = user;
+    this.pass = pass;
+
+    this.readyState = this.OPENED;
+
+    this.innerXhr.open(this.method, this.url, this.sync, this.user, this.pass);
+
+    if (this.headers) {
+      this.headers.forEach(function (elem) {
+        this.innerXhr.setRequestHeader(elem.key, elem.value);
+      });
+    }
   }
 
   private isVideoData(url: string): boolean {
