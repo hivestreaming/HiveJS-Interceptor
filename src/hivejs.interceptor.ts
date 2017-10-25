@@ -24,8 +24,34 @@ console.warn(
   `GENERATING HIVE XHR INTERCEPTOR WITH PARAMTERS: METADATA_EXTENTION ${StreamingData.METADATA_EXTENTION} DATA_EXTENTION ${StreamingData.DATA_EXTENTION}`
 );
 
+class HiveXMLHttpRequestUpload implements XMLHttpRequestUpload {
+  onabort: (ev: ProgressEvent) => any = null;
+  onerror: (ev: Event) => any = null;
+  onload: (ev: ProgressEvent) => any = null;
+  onloadend: (ev: ProgressEvent) => any = null;
+  onloadstart: (ev: ProgressEvent) => any = null;
+  onprogress: (ev: ProgressEvent) => any = null;
+  ontimeout: (ev: ProgressEvent) => any = null;
+
+  // N.B: we don't support this at the moment
+  addEventListener<K extends "abort" | "error" | "load" | "loadend" | "loadstart" | "progress" | "timeout">(type: K, listener: (this: XMLHttpRequestUpload, ev: XMLHttpRequestEventTargetEventMap[K]) => {}, useCapture?: boolean): void;
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject, useCapture?: boolean): void;
+  addEventListener(type: any, listener: any, useCapture?: any) {
+    throw new Error("Method not implemented.");
+  }
+  dispatchEvent(evt: Event): boolean {
+    throw new Error("Method not implemented.");
+  }
+  removeEventListener(type: string, listener?: EventListenerOrEventListenerObject, options?: boolean | any): void {
+    throw new Error("Method not implemented.");
+  }
+
+}
+
+
 // Implementing for now the XMLHttpRequest interface
 // in order to fix any compliance issue
+// tslint:disable-next-line:max-classes-per-file
 export class HiveXMLHttpRequest implements XMLHttpRequest {
   // ---------- XHR Constants ---------/
   readonly DONE: number = 4;
@@ -69,6 +95,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     this.withCredentials = false;
     this.timeout = 0;
     this.type = '';
+    this.upload = new HiveXMLHttpRequestUpload();
   }
 
   // --------------------------- XMLHttpRequest signature methods ----------------------------//
@@ -82,9 +109,9 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
         this.isVideoData(uri.origin() + uri.pathname())
       )
         this.generateXHR('hive');
-      else 
+      else
         this.generateXHR('original');
-      
+
       this.internalopen(method, url, sync, user, pass);
     } catch (e) {
       console.error(e);
@@ -137,9 +164,6 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
 
   abort() {
     if (this.innerXhr) this.innerXhr.abort();
-    else {
-      // TODO handle abort for async request
-    }
   }
 
   msCachingEnabled(): boolean {
@@ -169,11 +193,11 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
 
   private generateXHR(type: string) {
 
-    if(type === 'original'){
+    if (type === 'original') {
       this.innerXhr = new window['HiveOriginalXMLHttpRequest']();
       console.info('USING Original XMLHttpRequest', this.innerXhr);
     }
-    else{
+    else {
       this.innerXhr = new HiveRequestFactory();
       console.info('USING HiveRequestFactory', this.innerXhr);
     }
@@ -234,6 +258,32 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     }
     this.innerXhr.onabort = (event: ProgressEvent) => {
       this.onabort.call(this, event);
+    }
+
+    // binding all upload handlers if the xhr has an upload object
+    if ('upload' in this.innerXhr) {
+
+      this.innerXhr.upload.onabort = (ev: ProgressEvent) => {
+        this.upload.onabort.call(this, ev);
+      }
+      this.innerXhr.upload.onerror = (ev: ErrorEvent) => {
+        this.upload.onerror.call(this, ev);
+      }
+      this.innerXhr.upload.onload = (ev: ProgressEvent) => {
+        this.upload.onload.call(this, ev);
+      }
+      this.innerXhr.upload.onloadend = (ev: ProgressEvent) => {
+        this.upload.onloadend.call(this, ev);
+      }
+      this.innerXhr.upload.onloadstart = (ev: ProgressEvent) => {
+        this.upload.onloadstart.call(this, ev);
+      }
+      this.innerXhr.upload.onprogress = (ev: ProgressEvent) => {
+        this.upload.onprogress.call(this, ev);
+      }
+      this.innerXhr.upload.ontimeout = (ev: ProgressEvent) => {
+        this.upload.ontimeout.call(this, ev);
+      }
     }
   }
 
