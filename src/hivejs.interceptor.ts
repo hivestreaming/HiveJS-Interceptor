@@ -209,35 +209,35 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     this.innerXhr.onreadystatechange = (event: ProgressEvent) => {
       this.readyState = this.innerXhr.readyState;
 
-      if (this.innerXhr.readyState === this.DONE) {
-        try {
+      // UPDATING XHR DATA BASED ON THE READY STATE
+      switch (this.innerXhr.readyState) {
+        case this.OPENED:
+          break;
+        case this.HEADERS_RECEIVED:
+          this.responseURL = this.innerXhr.responseURL;
+          this.status = this.innerXhr.status;
+          this.statusText = this.innerXhr.statusText;
+          this.responseHeaders = this.innerXhr.getAllResponseHeaders();
+          break;
+          case this.LOADING:
+          this.responseURL = this.innerXhr.responseURL;
+          this.status = this.innerXhr.status;
+          this.statusText = this.innerXhr.statusText;
+          this.responseHeaders = this.innerXhr.getAllResponseHeaders();
+          break;
+        case this.DONE:
           const len = this.innerXhr.loaded;
           this.status = this.innerXhr.status;
           this.statusText = this.innerXhr.statusText;
           this.responseHeaders = this.innerXhr.getAllResponseHeaders();
           this.response = this.innerXhr.response;
           this.responseURL = this.innerXhr.responseURL;
-          if (
-            this.innerXhr.responseType === '' ||
-            this.innerXhr.responseType === 'document'
-          )
-            this.responseXML = this.innerXhr.responseXML;
-          if (
-            this.innerXhr.responseType === '' ||
-            this.innerXhr.responseType === 'text'
-          )
-            this.responseText = this.innerXhr.responseText;
+          this.responseXML = this.innerXhr.responseXML;
+          this.responseText = this.innerXhr.responseText;
           this.loaded = len;
-
-          // if (this.onprogress)
-          //   this.onprogress({
-          //     lengthComputable: true,
-          //     loaded: len,
-          //     total: len,
-          //   });
-        } catch (e) {
-          console.warn(e);
-        }
+          break;
+        default:
+          console.warn('WRONG READY STATE SET!', this.innerXhr.readyState);
       }
       this.onreadystatechange.call(this, event);
     }
