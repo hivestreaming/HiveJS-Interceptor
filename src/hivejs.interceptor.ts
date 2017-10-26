@@ -211,9 +211,9 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     if(this.readyState < this.OPENED){
       if(!this.eventsToAdd.hasOwnProperty(eventName))
         return;
-      const handlerIndex = this.eventsToAdd[name].indexOf(handler);
+        const handlerIndex = this.eventsToAdd[eventName].indexOf(handler);
         if (handlerIndex !== -1)
-          this.eventsToAdd[name].splice(handlerIndex, 1);
+          this.eventsToAdd[eventName].splice(handlerIndex, 1);
     }else if(this.innerXhr.removeEventListener)
       this.innerXhr.removeEventListener.call(this, eventName, handler);
    }
