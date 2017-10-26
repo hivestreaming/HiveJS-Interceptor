@@ -86,7 +86,13 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   method: any;
   type: string;
   loaded: number;
+  
   private innerXhr: any;
+
+  // This events are the one added before the actual open, 
+  // when the interceptor really creates the XHR Object
+  private eventsToAdd: any;
+
 
   constructor() {
     this.readyState = this.UNSENT;
@@ -96,6 +102,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     this.timeout = 0;
     this.type = '';
     this.upload = new HiveXMLHttpRequestUpload();
+    this.eventsToAdd = {};
   }
 
   // --------------------------- XMLHttpRequest signature methods ----------------------------//
@@ -171,13 +178,45 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   }
 
   // ----------------  Other XHR methods inheritated by EventTarget -------------- //
-  addEventListener() { }
 
-  dispatchEvent(event: Event): boolean {
-    return false;
+  // The addEventListener has two behaviour:
+  // If the XHR is already created (ready state OPENED), it actually adds the listener to the event
+  // If the XHR is not yet created it adds it in a list, so it will be added when generating the XHR
+  addEventListener(eventName: string, handler: any) {
+
+    if(this.readyState < this.OPENED){
+      if(this.eventsToAdd.hasOwnProperty(eventName))
+        this.eventsToAdd[eventName].push(handler);
+      else
+        this.eventsToAdd[eventName] = [handler];
+    }else if(this.innerXhr.addEventListener)
+      this.innerXhr.addEventListener.call(this, eventName, handler);
+
   }
 
-  removeEventListener() { }
+  // dispatch the event if and only if it has been created a XMLHTTPRequest for now
+  dispatchEvent(event: Event): boolean {
+    if(this.innerXhr && this.innerXhr instanceof window['HiveOriginalXMLHttpRequest'])
+      return this.innerXhr.dispatchEvent(event);
+    else{
+      console.warn('No Dispatch event is supported for the Hive Plugin Requests')
+    }
+  }
+
+  // The removeEventListener has two behaviour:
+  // If the XHR is already created (ready state OPENED), it actually removes the listener to the event
+  // If the XHR is not yet created it removes it form the add list
+  removeEventListener(eventName: string, handler: any) {
+
+    if(this.readyState < this.OPENED){
+      if(!this.eventsToAdd.hasOwnProperty(eventName))
+        return;
+      const handlerIndex = this.eventsToAdd[name].indexOf(handler);
+        if (handlerIndex !== -1)
+          this.eventsToAdd[name].splice(handlerIndex, 1);
+    }else if(this.innerXhr.removeEventListener)
+      this.innerXhr.removeEventListener.call(this, eventName, handler);
+   }
 
   // -------------------- PLAYER IMPLEMENTED CALLBACKS --------------- //
   onload(event: ProgressEvent) { }
@@ -202,7 +241,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
       console.info('USING HiveRequestFactory', this.innerXhr);
     }
 
-    // Binding all the event handlers to the created XHR
+    // Binding all known/typical the event handlers to the created XHR
     this.innerXhr.onload = (event: ProgressEvent) => {
       this.onload.call(this, event);
     }
@@ -285,6 +324,16 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
         this.upload.ontimeout.call(this, ev);
       }
     }
+
+    // binding all custom event handlers
+    if(this.eventsToAdd){
+      for(const eventName in this.eventsToAdd){
+        if(this.eventsToAdd.hasOwnProperty(eventName))
+          for(const handler of this.eventsToAdd[eventName])
+            this.innerXhr.addEventListener(eventName, handler);
+      }
+    }
+
   }
 
   private internalopen(method, url, sync, user, pass) {
