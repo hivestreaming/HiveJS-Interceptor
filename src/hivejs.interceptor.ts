@@ -16,9 +16,15 @@ declare var DATA_EXTENTION: string;
 declare var METADATA_EXTENTION: string;
 
 const StreamingData = {
-  METADATA_EXTENTION: typeof METADATA_EXTENTION !== 'undefined' && METADATA_EXTENTION !== '' ? METADATA_EXTENTION : '.m3u8',
-  DATA_EXTENTION: typeof DATA_EXTENTION !== 'undefined' && DATA_EXTENTION !== '' ? DATA_EXTENTION : '.ts'
-}
+  METADATA_EXTENTION:
+    typeof METADATA_EXTENTION !== 'undefined' && METADATA_EXTENTION !== ''
+      ? METADATA_EXTENTION
+      : '.m3u8',
+  DATA_EXTENTION:
+    typeof DATA_EXTENTION !== 'undefined' && DATA_EXTENTION !== ''
+      ? DATA_EXTENTION
+      : '.ts',
+};
 
 console.warn(
   `GENERATING HIVE XHR INTERCEPTOR WITH PARAMTERS: METADATA_EXTENTION ${StreamingData.METADATA_EXTENTION} DATA_EXTENTION ${StreamingData.DATA_EXTENTION}`
@@ -34,20 +40,42 @@ class HiveXMLHttpRequestUpload implements XMLHttpRequestUpload {
   ontimeout: (ev: ProgressEvent) => any = null;
 
   // N.B: we don't support this at the moment
-  addEventListener<K extends "abort" | "error" | "load" | "loadend" | "loadstart" | "progress" | "timeout">(type: K, listener: (this: XMLHttpRequestUpload, ev: XMLHttpRequestEventTargetEventMap[K]) => {}, useCapture?: boolean): void;
-  addEventListener(type: string, listener: EventListenerOrEventListenerObject, useCapture?: boolean): void;
+  addEventListener<
+    K extends
+      | 'abort'
+      | 'error'
+      | 'load'
+      | 'loadend'
+      | 'loadstart'
+      | 'progress'
+      | 'timeout'
+  >(
+    type: K,
+    listener: (
+      this: XMLHttpRequestUpload,
+      ev: XMLHttpRequestEventTargetEventMap[K]
+    ) => {},
+    useCapture?: boolean
+  ): void;
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    useCapture?: boolean
+  ): void;
   addEventListener(type: any, listener: any, useCapture?: any) {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
   dispatchEvent(evt: Event): boolean {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
-  removeEventListener(type: string, listener?: EventListenerOrEventListenerObject, options?: boolean | any): void {
-    throw new Error("Method not implemented.");
+  removeEventListener(
+    type: string,
+    listener?: EventListenerOrEventListenerObject,
+    options?: boolean | any
+  ): void {
+    throw new Error('Method not implemented.');
   }
-
 }
-
 
 // Implementing for now the XMLHttpRequest interface
 // in order to fix any compliance issue
@@ -86,13 +114,12 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   method: any;
   type: string;
   loaded: number;
-  
+
   private innerXhr: any;
 
-  // This events are the one added before the actual open, 
+  // This events are the one added before the actual open,
   // when the interceptor really creates the XHR Object
   private eventsToAdd: any;
-
 
   constructor() {
     this.readyState = this.UNSENT;
@@ -116,8 +143,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
         this.isVideoData(uri.origin() + uri.pathname())
       )
         this.generateXHR('hive');
-      else
-        this.generateXHR('original');
+      else this.generateXHR('original');
 
       this.internalopen(method, url, sync, user, pass);
     } catch (e) {
@@ -139,7 +165,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
       // parse once all the headers into a map
       if (this.responseHeaders) {
         const lines = this.responseHeaders.split('\n');
-        lines.forEach(function (line) {
+        lines.forEach(function(line) {
           const keyValue = line.split(':');
           this.parsedResponseHeaders[keyValue[0].trim()] = keyValue[1].trim();
         });
@@ -183,23 +209,25 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   // If the XHR is already created (ready state OPENED), it actually adds the listener to the event
   // If the XHR is not yet created it adds it in a list, so it will be added when generating the XHR
   addEventListener(eventName: string, handler: any) {
-
-    if(this.readyState < this.OPENED){
-      if(this.eventsToAdd.hasOwnProperty(eventName))
+    if (this.readyState < this.OPENED) {
+      if (this.eventsToAdd.hasOwnProperty(eventName))
         this.eventsToAdd[eventName].push(handler);
-      else
-        this.eventsToAdd[eventName] = [handler];
-    }else if(this.innerXhr.addEventListener)
+      else this.eventsToAdd[eventName] = [handler];
+    } else if (this.innerXhr.addEventListener)
       this.innerXhr.addEventListener.call(this, eventName, handler);
-
   }
 
   // dispatch the event if and only if it has been created a XMLHTTPRequest for now
   dispatchEvent(event: Event): boolean {
-    if(this.innerXhr && this.innerXhr instanceof window['HiveOriginalXMLHttpRequest'])
+    if (
+      this.innerXhr &&
+      this.innerXhr instanceof window['HiveOriginalXMLHttpRequest']
+    )
       return this.innerXhr.dispatchEvent(event);
-    else{
-      console.warn('No Dispatch event is supported for the Hive Plugin Requests')
+    else {
+      console.warn(
+        'No Dispatch event is supported for the Hive Plugin Requests'
+      );
     }
   }
 
@@ -207,36 +235,32 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   // If the XHR is already created (ready state OPENED), it actually removes the listener to the event
   // If the XHR is not yet created it removes it form the add list
   removeEventListener(eventName: string, handler: any) {
-
-    if(this.readyState < this.OPENED){
-      if(!this.eventsToAdd.hasOwnProperty(eventName))
-        return;
-        const handlerIndex = this.eventsToAdd[eventName].indexOf(handler);
-        if (handlerIndex !== -1)
-          this.eventsToAdd[eventName].splice(handlerIndex, 1);
-    }else if(this.innerXhr.removeEventListener)
+    if (this.readyState < this.OPENED) {
+      if (!this.eventsToAdd.hasOwnProperty(eventName)) return;
+      const handlerIndex = this.eventsToAdd[eventName].indexOf(handler);
+      if (handlerIndex !== -1)
+        this.eventsToAdd[eventName].splice(handlerIndex, 1);
+    } else if (this.innerXhr.removeEventListener)
       this.innerXhr.removeEventListener.call(this, eventName, handler);
-   }
+  }
 
   // -------------------- PLAYER IMPLEMENTED CALLBACKS --------------- //
-  onload(event: ProgressEvent) { }
-  onloadstart(event: ProgressEvent) { }
-  onloadend(event: ProgressEvent) { }
-  onerror(event: any) { }
-  onprogress(event: ProgressEvent) { }
-  ontimeout(event: ProgressEvent) { }
-  onabort(event: ProgressEvent) { }
-  onreadystatechange(event: Event) { }
+  onload(event: ProgressEvent) {}
+  onloadstart(event: ProgressEvent) {}
+  onloadend(event: ProgressEvent) {}
+  onerror(event: any) {}
+  onprogress(event: ProgressEvent) {}
+  ontimeout(event: ProgressEvent) {}
+  onabort(event: ProgressEvent) {}
+  onreadystatechange(event: Event) {}
 
   // -------------------- PRIVATE CUSTOM METHODS ---------------------- //
 
   private generateXHR(type: string) {
-
     if (type === 'original') {
       this.innerXhr = new window['HiveOriginalXMLHttpRequest']();
       console.info('USING Original XMLHttpRequest', this.innerXhr);
-    }
-    else {
+    } else {
       this.innerXhr = new HiveRequestFactory();
       console.info('USING HiveRequestFactory', this.innerXhr);
     }
@@ -244,7 +268,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     // Binding all known/typical the event handlers to the created XHR
     this.innerXhr.onload = (event: ProgressEvent) => {
       this.onload.call(this, event);
-    }
+    };
     this.innerXhr.onreadystatechange = (event: ProgressEvent) => {
       this.readyState = this.innerXhr.readyState;
 
@@ -258,7 +282,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
           this.statusText = this.innerXhr.statusText;
           this.responseHeaders = this.innerXhr.getAllResponseHeaders();
           break;
-          case this.LOADING:
+        case this.LOADING:
           this.responseURL = this.innerXhr.responseURL;
           this.status = this.innerXhr.status;
           this.statusText = this.innerXhr.statusText;
@@ -279,61 +303,59 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
           console.warn('WRONG READY STATE SET!', this.innerXhr.readyState);
       }
       this.onreadystatechange.call(this, event);
-    }
+    };
     this.innerXhr.onloadstart = (event: ProgressEvent) => {
       this.onloadstart.call(this, event);
-    }
+    };
     this.innerXhr.onloadend = (event: ProgressEvent) => {
       this.onloadend.call(this, event);
-    }
+    };
     this.innerXhr.onerror = (event: ProgressEvent) => {
       this.onerror.call(this, event);
-    }
+    };
     this.innerXhr.onprogress = (event: ProgressEvent) => {
       this.onprogress.call(this, event);
-    }
+    };
     this.innerXhr.ontimeout = (event: ProgressEvent) => {
       this.ontimeout.call(this, event);
-    }
+    };
     this.innerXhr.onabort = (event: ProgressEvent) => {
       this.onabort.call(this, event);
-    }
+    };
 
     // binding all upload handlers if the xhr has an upload object
     if ('upload' in this.innerXhr) {
-
       this.innerXhr.upload.onabort = (ev: ProgressEvent) => {
         this.upload.onabort.call(this, ev);
-      }
+      };
       this.innerXhr.upload.onerror = (ev: ErrorEvent) => {
         this.upload.onerror.call(this, ev);
-      }
+      };
       this.innerXhr.upload.onload = (ev: ProgressEvent) => {
         this.upload.onload.call(this, ev);
-      }
+      };
       this.innerXhr.upload.onloadend = (ev: ProgressEvent) => {
         this.upload.onloadend.call(this, ev);
-      }
+      };
       this.innerXhr.upload.onloadstart = (ev: ProgressEvent) => {
         this.upload.onloadstart.call(this, ev);
-      }
+      };
       this.innerXhr.upload.onprogress = (ev: ProgressEvent) => {
         this.upload.onprogress.call(this, ev);
-      }
+      };
       this.innerXhr.upload.ontimeout = (ev: ProgressEvent) => {
         this.upload.ontimeout.call(this, ev);
-      }
+      };
     }
 
     // binding all custom event handlers
-    if(this.eventsToAdd){
-      for(const eventName in this.eventsToAdd){
-        if(this.eventsToAdd.hasOwnProperty(eventName))
-          for(const handler of this.eventsToAdd[eventName])
+    if (this.eventsToAdd) {
+      for (const eventName in this.eventsToAdd) {
+        if (this.eventsToAdd.hasOwnProperty(eventName))
+          for (const handler of this.eventsToAdd[eventName])
             this.innerXhr.addEventListener(eventName, handler);
       }
     }
-
   }
 
   private internalopen(method, url, sync, user, pass) {
@@ -351,7 +373,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     this.innerXhr.open(this.method, this.url, this.sync, this.user, this.pass);
 
     if (this.headers) {
-      this.headers.forEach(function (elem) {
+      this.headers.forEach(function(elem) {
         this.innerXhr.setRequestHeader(elem.key, elem.value);
       });
     }
@@ -368,8 +390,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   }
 }
 
-
-// We are using these methods to override and recover the XMLHttpRequest default implementation, in this way we will need to use it just when a 
+// We are using these methods to override and recover the XMLHttpRequest default implementation, in this way we will need to use it just when a
 // HiveU Web session is initialized
 
 function activateXHRInterceptor() {
@@ -386,8 +407,6 @@ function deactivateXHRInterceptor() {
 }
 
 if (typeof window !== 'undefined') {
-
   window['activateXHRInterceptor'] = activateXHRInterceptor;
   window['deactivateXHRInterceptor'] = deactivateXHRInterceptor;
-
 }
