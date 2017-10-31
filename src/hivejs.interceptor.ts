@@ -267,55 +267,67 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
 
     // Binding all known/typical the event handlers to the created XHR
     this.innerXhr.onload = (event: ProgressEvent) => {
-      this.onload.call(this, event);
+      if (typeof this.onload === 'function') this.onload.call(this, event);
     };
     this.innerXhr.onreadystatechange = (event: ProgressEvent) => {
       this.readyState = this.innerXhr.readyState;
       // UPDATING XHR DATA
       this.cloneXHRInternalStatus();
-      this.onreadystatechange.call(this, event);
+      if (typeof this.onreadystatechange === 'function')
+        this.onreadystatechange.call(this, event);
     };
     this.innerXhr.onloadstart = (event: ProgressEvent) => {
-      this.onloadstart.call(this, event);
+      if (typeof this.onloadstart === 'function')
+        this.onloadstart.call(this, event);
     };
     this.innerXhr.onloadend = (event: ProgressEvent) => {
-      this.onloadend.call(this, event);
+      if (typeof this.onloadend === 'function')
+        this.onloadend.call(this, event);
     };
     this.innerXhr.onerror = (event: ProgressEvent) => {
-      this.onerror.call(this, event);
+      if (typeof this.onerror === 'function') this.onerror.call(this, event);
     };
     this.innerXhr.onprogress = (event: ProgressEvent) => {
-      this.onprogress.call(this, event);
+      if (typeof this.onprogress === 'function')
+        this.onprogress.call(this, event);
     };
     this.innerXhr.ontimeout = (event: ProgressEvent) => {
-      this.ontimeout.call(this, event);
+      if (typeof this.ontimeout === 'function')
+        this.ontimeout.call(this, event);
     };
     this.innerXhr.onabort = (event: ProgressEvent) => {
-      this.onabort.call(this, event);
+      if (typeof this.onabort === 'function') this.onabort.call(this, event);
     };
 
     // binding all upload handlers if the xhr has an upload object
     if ('upload' in this.innerXhr) {
       this.innerXhr.upload.onabort = (ev: ProgressEvent) => {
-        this.upload.onabort.call(this, ev);
+        if (typeof this.upload.onabort === 'function')
+          this.upload.onabort.call(this, ev);
       };
       this.innerXhr.upload.onerror = (ev: ErrorEvent) => {
-        this.upload.onerror.call(this, ev);
+        if (typeof this.upload.onerror === 'function')
+          this.upload.onerror.call(this, ev);
       };
       this.innerXhr.upload.onload = (ev: ProgressEvent) => {
-        this.upload.onload.call(this, ev);
+        if (typeof this.upload.onload === 'function')
+          this.upload.onload.call(this, ev);
       };
       this.innerXhr.upload.onloadend = (ev: ProgressEvent) => {
-        this.upload.onloadend.call(this, ev);
+        if (typeof this.upload.onloadend === 'function')
+          this.upload.onloadend.call(this, ev);
       };
       this.innerXhr.upload.onloadstart = (ev: ProgressEvent) => {
-        this.upload.onloadstart.call(this, ev);
+        if (typeof this.upload.onloadstart === 'function')
+          this.upload.onloadstart.call(this, ev);
       };
       this.innerXhr.upload.onprogress = (ev: ProgressEvent) => {
-        this.upload.onprogress.call(this, ev);
+        if (typeof this.upload.onprogress === 'function')
+          this.upload.onprogress.call(this, ev);
       };
       this.innerXhr.upload.ontimeout = (ev: ProgressEvent) => {
-        this.upload.ontimeout.call(this, ev);
+        if (typeof this.upload.ontimeout === 'function')
+          this.upload.ontimeout.call(this, ev);
       };
     }
 
@@ -335,8 +347,10 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     this.responseHeaders = this.innerXhr.getAllResponseHeaders();
     this.response = this.innerXhr.response;
     this.responseURL = this.innerXhr.responseURL;
-    this.responseXML = this.innerXhr.responseXML;
-    this.responseText = this.innerXhr.responseText;
+    if (this.responseType === '' || this.responseType === 'document')
+      this.responseXML = this.innerXhr.responseXML;
+    if (this.responseType === '' || this.responseType === 'text')
+      this.responseText = this.innerXhr.responseText;
     this.loaded = this.innerXhr.loaded;
   }
 
