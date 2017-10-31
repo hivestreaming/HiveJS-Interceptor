@@ -271,37 +271,8 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     };
     this.innerXhr.onreadystatechange = (event: ProgressEvent) => {
       this.readyState = this.innerXhr.readyState;
-
-      // UPDATING XHR DATA BASED ON THE READY STATE
-      switch (this.innerXhr.readyState) {
-        case this.OPENED:
-          break;
-        case this.HEADERS_RECEIVED:
-          this.responseURL = this.innerXhr.responseURL;
-          this.status = this.innerXhr.status;
-          this.statusText = this.innerXhr.statusText;
-          this.responseHeaders = this.innerXhr.getAllResponseHeaders();
-          break;
-        case this.LOADING:
-          this.responseURL = this.innerXhr.responseURL;
-          this.status = this.innerXhr.status;
-          this.statusText = this.innerXhr.statusText;
-          this.responseHeaders = this.innerXhr.getAllResponseHeaders();
-          break;
-        case this.DONE:
-          const len = this.innerXhr.loaded;
-          this.status = this.innerXhr.status;
-          this.statusText = this.innerXhr.statusText;
-          this.responseHeaders = this.innerXhr.getAllResponseHeaders();
-          this.response = this.innerXhr.response;
-          this.responseURL = this.innerXhr.responseURL;
-          this.responseXML = this.innerXhr.responseXML;
-          this.responseText = this.innerXhr.responseText;
-          this.loaded = len;
-          break;
-        default:
-          console.warn('WRONG READY STATE SET!', this.innerXhr.readyState);
-      }
+      // UPDATING XHR DATA
+      this.cloneXHRInternalStatus();
       this.onreadystatechange.call(this, event);
     };
     this.innerXhr.onloadstart = (event: ProgressEvent) => {
@@ -356,6 +327,17 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
             this.innerXhr.addEventListener(eventName, handler);
       }
     }
+  }
+
+  private cloneXHRInternalStatus() {
+    this.status = this.innerXhr.status;
+    this.statusText = this.innerXhr.statusText;
+    this.responseHeaders = this.innerXhr.getAllResponseHeaders();
+    this.response = this.innerXhr.response;
+    this.responseURL = this.innerXhr.responseURL;
+    this.responseXML = this.innerXhr.responseXML;
+    this.responseText = this.innerXhr.responseText;
+    this.loaded = this.innerXhr.loaded;
   }
 
   private internalopen(method, url, sync, user, pass) {

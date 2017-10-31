@@ -7,35 +7,39 @@ interface Window {
 declare var window: Window;
 chai.should();
 
-function xhrGenAndSend(done?) {
-  const testXhr: any = new XMLHttpRequest();
+function xhrGenAndSend(): Promise<any[]> {
   const statusesList = [];
-  testXhr.onreadystatechange = event => {
-    console.log('event', event);
 
-    statusesList.push({
-      readyState: testXhr.readyState,
-      response: testXhr.response,
-      responseText: testXhr.responseText,
-      responseType: testXhr.responseType,
-      responseURL: testXhr.responseURL,
-      responseXML: testXhr.responseXML,
-      status: testXhr.status,
-      statusText: testXhr.statusText,
-      timeout: testXhr.timeout,
-      upload: testXhr.upload,
-      withCredentials: testXhr.withCredentials,
-    });
+  const allDonePromise = new Promise<any[]>((resolve, reject) => {
+    const testXhr: any = new XMLHttpRequest();
+    testXhr.onreadystatechange = event => {
+      console.log('event', event);
 
-    if (event.currentTarget.readyState === 4) {
-      console.log('STATUSES: ', statusesList);
-      if (done) done();
-    }
-  };
+      statusesList.push({
+        readyState: testXhr.readyState,
+        response: testXhr.response,
+        responseText: testXhr.responseText,
+        responseType: testXhr.responseType,
+        responseURL: testXhr.responseURL,
+        responseXML: testXhr.responseXML,
+        status: testXhr.status,
+        statusText: testXhr.statusText,
+        timeout: testXhr.timeout,
+        withCredentials: testXhr.withCredentials,
+      });
 
-  testXhr.open('GET', 'http://ams-live.hivestreaming.com/manifest.m3u8');
+      if (event.currentTarget.readyState === 4) {
+        console.log('STATUSES: ', statusesList);
+        resolve(statusesList);
+      }
+    };
 
-  testXhr.send();
+    testXhr.open('GET', 'http://ams-live.hivestreaming.com/manifest.m3u8');
+
+    testXhr.send();
+  });
+
+  return allDonePromise;
 }
 
 describe('Generic Tests for HiveJS XHR Interceptor:', () => {
@@ -69,14 +73,30 @@ describe('Generic Tests for HiveJS XHR Interceptor:', () => {
       XMLHttpRequest['name'].should.equal('XMLHttpRequest');
     });
 
-    it('has the same statuses as a normal XHR when activated and going thorugh the all open-send workflow', done => {
+    it('has the same statuses as a normal XHR when activated and going thorugh the all open-send workflow', () => {
       window.activateXHRInterceptor();
 
-      xhrGenAndSend();
+      return xhrGenAndSend().then(interceptorStatuses => {
+        window.deactivateXHRInterceptor();
 
-      window.deactivateXHRInterceptor();
-
-      xhrGenAndSend(done);
+        return xhrGenAndSend().then(normalStatuses => {
+          chai.expect(normalStatuses.length).equal(interceptorStatuses.length);
+          // tslint:disable-next-line:forin
+          for (const index in normalStatuses) {
+            console.log(
+              'normal Statuses',
+              JSON.stringify(normalStatuses[index])
+            );
+            console.log(
+              'Interceptor Statuses',
+              JSON.stringify(interceptorStatuses[index])
+            );
+            chai
+              .expect(normalStatuses[index])
+              .to.deep.equal(interceptorStatuses[index]);
+          }
+        });
+      });
     });
   });
 });
