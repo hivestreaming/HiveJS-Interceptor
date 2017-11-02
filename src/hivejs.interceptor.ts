@@ -401,7 +401,11 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   }
 
   private debugLog(message: string, data) {
-    if (verbose) console.log('[HiveJSInterceptor] ' + message, data);
+    if(verbose && typeof console !== 'undefined') {
+      try{
+        console.log('[HiveJSInterceptor] ' + message, data);
+      }catch(error){};
+    }
   }
 }
 
@@ -410,10 +414,13 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
 
 function activateXHRInterceptor(isVerbose: boolean = false) {
   verbose = isVerbose;
-  if (verbose)
-    console.warn(
-      `ACTIVATING HIVE XHR INTERCEPTOR WITH PARAMTERS: METADATA_EXTENTION ${StreamingData.METADATA_EXTENTION} DATA_EXTENTION ${StreamingData.DATA_EXTENTION}`
-    );
+  if(verbose && typeof console !== 'undefined'){
+    try{
+      console.log(
+        `ACTIVATING HIVE XHR INTERCEPTOR WITH PARAMTERS: METADATA_EXTENTION ${StreamingData.METADATA_EXTENTION} DATA_EXTENTION ${StreamingData.DATA_EXTENTION}`
+      );
+    }catch(error){};
+  }
   if (typeof window !== 'undefined') {
     window['HiveOriginalXMLHttpRequest'] = window['XMLHttpRequest'];
     window['XMLHttpRequest'] = HiveXMLHttpRequest;
