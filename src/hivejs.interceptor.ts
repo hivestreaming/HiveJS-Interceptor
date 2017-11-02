@@ -14,6 +14,7 @@ const URI = require('urijs');
 declare let HiveRequestFactory;
 declare var DATA_EXTENTION: string;
 declare var METADATA_EXTENTION: string;
+let verbose: boolean = false;
 
 const StreamingData = {
   METADATA_EXTENTION:
@@ -25,10 +26,6 @@ const StreamingData = {
       ? DATA_EXTENTION
       : '.ts',
 };
-
-// console.warn(
-//   `GENERATING HIVE XHR INTERCEPTOR WITH PARAMTERS: METADATA_EXTENTION ${StreamingData.METADATA_EXTENTION} DATA_EXTENTION ${StreamingData.DATA_EXTENTION}`
-// );
 
 class HiveXMLHttpRequestUpload implements XMLHttpRequestUpload {
   onabort: (ev: ProgressEvent) => any = null;
@@ -256,42 +253,65 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   // -------------------- PRIVATE CUSTOM METHODS ---------------------- //
 
   private generateXHR(type: string) {
-    if (type === 'original')
+    if (type === 'original') {
+      this.debugLog('USING Original XMLHttpRequest', this.innerXhr);
       this.innerXhr = new window['HiveOriginalXMLHttpRequest']();
-    else this.innerXhr = new HiveRequestFactory();
+    } else {
+      this.debugLog('USING HiveRequestFactory', this.innerXhr);
+      this.innerXhr = new HiveRequestFactory();
+    }
 
     // Binding all known/typical the event handlers to the created XHR
     this.innerXhr.onload = (event: ProgressEvent) => {
-      if (typeof this.onload === 'function') this.onload.call(this, event);
+      if (typeof this.onload === 'function') {
+        this.debugLog('onload: ', event);
+        this.onload.call(this, event);
+      }
     };
     this.innerXhr.onreadystatechange = (event: ProgressEvent) => {
       this.readyState = this.innerXhr.readyState;
       // UPDATING XHR DATA
       this.cloneXHRInternalStatus();
-      if (typeof this.onreadystatechange === 'function')
+      if (typeof this.onreadystatechange === 'function') {
+        this.debugLog('onreadystatechange: ', event);
         this.onreadystatechange.call(this, event);
+      }
     };
     this.innerXhr.onloadstart = (event: ProgressEvent) => {
-      if (typeof this.onloadstart === 'function')
+      if (typeof this.onloadstart === 'function') {
+        this.debugLog('onloadstart: ', event);
         this.onloadstart.call(this, event);
+      }
     };
     this.innerXhr.onloadend = (event: ProgressEvent) => {
-      if (typeof this.onloadend === 'function')
+      if (typeof this.onloadend === 'function') {
+        this.debugLog('onloadend: ', event);
         this.onloadend.call(this, event);
+      }
     };
     this.innerXhr.onerror = (event: ProgressEvent) => {
-      if (typeof this.onerror === 'function') this.onerror.call(this, event);
+      if (typeof this.onerror === 'function') {
+        this.debugLog('onerror: ', event);
+        this.onerror.call(this, event);
+      }
     };
     this.innerXhr.onprogress = (event: ProgressEvent) => {
-      if (typeof this.onprogress === 'function')
+      if (typeof this.onprogress === 'function') {
+        this.debugLog('onprogress: ', event);
         this.onprogress.call(this, event);
+      }
     };
     this.innerXhr.ontimeout = (event: ProgressEvent) => {
-      if (typeof this.ontimeout === 'function')
+      if (typeof this.ontimeout === 'function') {
+        this.debugLog('ontimeout: ', event);
         this.ontimeout.call(this, event);
+      }
     };
     this.innerXhr.onabort = (event: ProgressEvent) => {
-      if (typeof this.onabort === 'function') this.onabort.call(this, event);
+      if (typeof this.onabort === 'function') {
+        this.debugLog('onabort: ', event);
+        this.onabort.call(this, event);
+      }
     };
 
     // binding all upload handlers if the xhr has an upload object
@@ -379,12 +399,21 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
         url.indexOf(dataExt, url.length - dataExt.length) >= 0)
     );
   }
+
+  private debugLog(message: string, data) {
+    if (verbose) console.log('[HiveJSInterceptor] ' + message, data);
+  }
 }
 
 // We are using these methods to override and recover the XMLHttpRequest default implementation, in this way we will need to use it just when a
 // HiveU Web session is initialized
 
-function activateXHRInterceptor() {
+function activateXHRInterceptor(isVerbose: boolean = false) {
+  verbose = isVerbose;
+  if (verbose)
+    console.warn(
+      `ACTIVATING HIVE XHR INTERCEPTOR WITH PARAMTERS: METADATA_EXTENTION ${StreamingData.METADATA_EXTENTION} DATA_EXTENTION ${StreamingData.DATA_EXTENTION}`
+    );
   if (typeof window !== 'undefined') {
     window['HiveOriginalXMLHttpRequest'] = window['XMLHttpRequest'];
     window['XMLHttpRequest'] = HiveXMLHttpRequest;
@@ -392,6 +421,7 @@ function activateXHRInterceptor() {
 }
 
 function deactivateXHRInterceptor() {
+  verbose = false;
   if (typeof window !== 'undefined' && window['HiveOriginalXMLHttpRequest']) {
     window['XMLHttpRequest'] = window['HiveOriginalXMLHttpRequest'];
   }
