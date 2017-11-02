@@ -258,8 +258,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   private generateXHR(type: string) {
     if (type === 'original')
       this.innerXhr = new window['HiveOriginalXMLHttpRequest']();
-    else
-      this.innerXhr = new HiveRequestFactory();
+    else this.innerXhr = new HiveRequestFactory();
 
     // Binding all known/typical the event handlers to the created XHR
     this.innerXhr.onload = (event: ProgressEvent) => {
