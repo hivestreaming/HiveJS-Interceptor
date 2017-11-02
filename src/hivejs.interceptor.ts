@@ -26,9 +26,9 @@ const StreamingData = {
       : '.ts',
 };
 
-console.warn(
-  `GENERATING HIVE XHR INTERCEPTOR WITH PARAMTERS: METADATA_EXTENTION ${StreamingData.METADATA_EXTENTION} DATA_EXTENTION ${StreamingData.DATA_EXTENTION}`
-);
+// console.warn(
+//   `GENERATING HIVE XHR INTERCEPTOR WITH PARAMTERS: METADATA_EXTENTION ${StreamingData.METADATA_EXTENTION} DATA_EXTENTION ${StreamingData.DATA_EXTENTION}`
+// );
 
 class HiveXMLHttpRequestUpload implements XMLHttpRequestUpload {
   onabort: (ev: ProgressEvent) => any = null;
@@ -149,7 +149,6 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     } catch (e) {
       console.error(e);
     }
-    console.info('OPEN: ' + this.method + ' ' + this.url);
   }
 
   overrideMimeType(mimeType) {
@@ -225,7 +224,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     )
       return this.innerXhr.dispatchEvent(event);
     else {
-      console.warn(
+      console.log(
         'No Dispatch event is supported for the Hive Plugin Requests'
       );
     }
@@ -257,13 +256,10 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   // -------------------- PRIVATE CUSTOM METHODS ---------------------- //
 
   private generateXHR(type: string) {
-    if (type === 'original') {
+    if (type === 'original')
       this.innerXhr = new window['HiveOriginalXMLHttpRequest']();
-      console.info('USING Original XMLHttpRequest', this.innerXhr);
-    } else {
+    else
       this.innerXhr = new HiveRequestFactory();
-      console.info('USING HiveRequestFactory', this.innerXhr);
-    }
 
     // Binding all known/typical the event handlers to the created XHR
     this.innerXhr.onload = (event: ProgressEvent) => {
