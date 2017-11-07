@@ -273,7 +273,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
       // UPDATING XHR DATA
       this.cloneXHRInternalStatus();
       if (typeof this.onreadystatechange === 'function') {
-        this.debugLog('onreadystatechange: ', event);
+        // this.debugLog('onreadystatechange: ', event);
         this.onreadystatechange.call(this, event);
       }
     };
@@ -297,13 +297,13 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     };
     this.innerXhr.onprogress = (event: ProgressEvent) => {
       if (typeof this.onprogress === 'function') {
-        this.debugLog('onprogress: ', event);
+        // this.debugLog('onprogress: ', event);
         this.onprogress.call(this, event);
       }
     };
     this.innerXhr.ontimeout = (event: ProgressEvent) => {
       if (typeof this.ontimeout === 'function') {
-        this.debugLog('ontimeout: ', event);
+        // this.debugLog('ontimeout: ', event);
         this.ontimeout.call(this, event);
       }
     };
@@ -403,7 +403,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   private debugLog(message: string, data) {
     if (verbose && typeof console !== 'undefined') {
       try {
-        console.log('[HiveJSInterceptor] ' + message, data);
+        console.log(`[HiveJSInterceptor] ${message}`, data);
       } catch (error) {}
     }
   }
