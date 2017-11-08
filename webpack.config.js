@@ -30,7 +30,8 @@ module.exports = env => {
             // }),
             new webpack.DefinePlugin({
                 'METADATA_EXTENTION': JSON.stringify(env.METADATA_EXTENTION),
-                'DATA_EXTENTION': JSON.stringify(env.DATA_EXTENTION)
+                'DATA_EXTENTION': JSON.stringify(env.DATA_EXTENTION),
+                'MORE_VERBOSE': env.MORE_VERBOSE
             })
         ]
     }

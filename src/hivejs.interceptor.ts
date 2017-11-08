@@ -14,6 +14,7 @@ const URI = require('urijs');
 declare let HiveRequestFactory;
 declare var DATA_EXTENTION: string;
 declare var METADATA_EXTENTION: string;
+declare var MORE_VERBOSE: boolean;
 let verbose: boolean = false;
 
 const StreamingData = {
@@ -273,7 +274,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
       // UPDATING XHR DATA
       this.cloneXHRInternalStatus();
       if (typeof this.onreadystatechange === 'function') {
-        // this.debugLog('onreadystatechange: ', event);
+        this.debugVerboseLog('onreadystatechange: ', event);
         this.onreadystatechange.call(this, event);
       }
     };
@@ -297,13 +298,13 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     };
     this.innerXhr.onprogress = (event: ProgressEvent) => {
       if (typeof this.onprogress === 'function') {
-        // this.debugLog('onprogress: ', event);
+        this.debugVerboseLog('onprogress: ', event);
         this.onprogress.call(this, event);
       }
     };
     this.innerXhr.ontimeout = (event: ProgressEvent) => {
       if (typeof this.ontimeout === 'function') {
-        // this.debugLog('ontimeout: ', event);
+        this.debugLog('ontimeout: ', event);
         this.ontimeout.call(this, event);
       }
     };
@@ -401,11 +402,15 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   }
 
   private debugLog(message: string, data) {
-    if (verbose && typeof console !== 'undefined') {
+    if (verbose && typeof console !== 'undefined')
       try {
         console.log(`[HiveJSInterceptor] ${message}`, data);
       } catch (error) {}
-    }
+  }
+
+  private debugVerboseLog(message: string, data) {
+    if (typeof MORE_VERBOSE !== 'undefined' && MORE_VERBOSE)
+      this.debugLog(message, data);
   }
 }
 
