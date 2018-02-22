@@ -28,6 +28,8 @@ const StreamingData = {
       : '.ts',
 };
 
+let session;
+
 class HiveXMLHttpRequestUpload implements XMLHttpRequestUpload {
   onabort: (ev: ProgressEvent) => any = null;
   onerror: (ev: Event) => any = null;
@@ -79,6 +81,7 @@ class HiveXMLHttpRequestUpload implements XMLHttpRequestUpload {
 // in order to fix any compliance issue
 // tslint:disable-next-line:max-classes-per-file
 export class HiveXMLHttpRequest implements XMLHttpRequest {
+  static session: string;
   // ---------- XHR Constants ---------/
   readonly DONE: number = 4;
   readonly LOADING: number = 3;
@@ -132,7 +135,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
 
   // --------------------------- XMLHttpRequest signature methods ----------------------------//
   // reference: https://xhr.spec.whatwg.org/#the-open()-method
-  open(method, url, sync = true, user = null, pass = null) {
+  open(method, url, sync = true, user?, pass?) {
     try {
       // here we decide if we should handle it with HiveRequestFactory or internal XHR
       const uri = new URI(url);
@@ -259,7 +262,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
       this.innerXhr = new window['HiveOriginalXMLHttpRequest']();
     } else {
       this.debugLog('USING HiveRequestFactory', this.innerXhr);
-      this.innerXhr = new HiveRequestFactory();
+      this.innerXhr = new HiveRequestFactory(session);
     }
 
     // Binding all known/typical the event handlers to the created XHR
@@ -417,7 +420,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
 // We are using these methods to override and recover the XMLHttpRequest default implementation, in this way we will need to use it just when a
 // HiveU Web session is initialized
 
-function activateXHRInterceptor(isVerbose: boolean = false) {
+function activateXHRInterceptor(isVerbose: boolean = false, sessionID) {
   verbose = isVerbose;
   if (verbose && typeof console !== 'undefined') {
     try {
@@ -428,6 +431,7 @@ function activateXHRInterceptor(isVerbose: boolean = false) {
   }
   if (typeof window !== 'undefined') {
     window['HiveOriginalXMLHttpRequest'] = window['XMLHttpRequest'];
+    session = sessionID;
     window['XMLHttpRequest'] = HiveXMLHttpRequest;
   }
 }
