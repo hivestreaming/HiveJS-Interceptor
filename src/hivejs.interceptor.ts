@@ -42,21 +42,21 @@ class HiveXMLHttpRequestUpload implements XMLHttpRequestUpload {
   // N.B: we don't support this at the moment
   addEventListener<
     K extends
-      | 'abort'
-      | 'error'
-      | 'load'
-      | 'loadend'
-      | 'loadstart'
-      | 'progress'
-      | 'timeout'
-  >(
-    type: K,
-    listener: (
-      this: XMLHttpRequestUpload,
-      ev: XMLHttpRequestEventTargetEventMap[K]
-    ) => {},
-    useCapture?: boolean
-  ): void;
+    | 'abort'
+    | 'error'
+    | 'load'
+    | 'loadend'
+    | 'loadstart'
+    | 'progress'
+    | 'timeout'
+    >(
+      type: K,
+      listener: (
+        this: XMLHttpRequestUpload,
+        ev: XMLHttpRequestEventTargetEventMap[K]
+      ) => {},
+      useCapture?: boolean
+    ): void;
   addEventListener(
     type: string,
     listener: EventListenerOrEventListenerObject,
@@ -165,7 +165,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
       // parse once all the headers into a map
       if (this.responseHeaders) {
         const lines = this.responseHeaders.split('\n');
-        lines.forEach(function(line) {
+        lines.forEach(function (line) {
           const keyValue = line.split(':');
           this.parsedResponseHeaders[keyValue[0].trim()] = keyValue[1].trim();
         });
@@ -176,9 +176,14 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   }
 
   setRequestHeader(name, value) {
-    if (!this.headers) this.headers = [];
-    // console.info("HEADER " + name + " " + value);
-    this.headers.push({ key: name, value });
+    if (this.innerXhr) {
+      console.log(`ADDING HEADER ${name} - ${value}`, this.innerXhr, this.url);
+      this.innerXhr.setRequestHeader(name, value);
+    } else {
+      if (!this.headers) this.headers = [];
+      // console.info("HEADER " + name + " " + value);
+      this.headers.push({ key: name, value });
+    }
   }
 
   send(body) {
@@ -245,14 +250,14 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   }
 
   // -------------------- PLAYER IMPLEMENTED CALLBACKS --------------- //
-  onload(event: ProgressEvent) {}
-  onloadstart(event: ProgressEvent) {}
-  onloadend(event: ProgressEvent) {}
-  onerror(event: any) {}
-  onprogress(event: ProgressEvent) {}
-  ontimeout(event: ProgressEvent) {}
-  onabort(event: ProgressEvent) {}
-  onreadystatechange(event: Event) {}
+  onload(event: ProgressEvent) { }
+  onloadstart(event: ProgressEvent) { }
+  onloadend(event: ProgressEvent) { }
+  onerror(event: any) { }
+  onprogress(event: ProgressEvent) { }
+  ontimeout(event: ProgressEvent) { }
+  onabort(event: ProgressEvent) { }
+  onreadystatechange(event: Event) { }
 
   // -------------------- PRIVATE CUSTOM METHODS ---------------------- //
 
@@ -388,9 +393,9 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     this.innerXhr.open(this.method, this.url, this.sync, this.user, this.pass);
 
     if (this.headers) {
-      this.headers.forEach(function(elem) {
-        this.innerXhr.setRequestHeader(elem.key, elem.value);
-      });
+      for (const header of this.headers) {
+        this.innerXhr.setRequestHeader(header.key, header.value);
+      }
     }
   }
 
@@ -408,7 +413,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     if (verbose && typeof console !== 'undefined')
       try {
         console.log(`[HiveJSInterceptor] ${message}`, data);
-      } catch (error) {}
+      } catch (error) { }
   }
 
   private debugVerboseLog(message: string, data) {
@@ -427,7 +432,7 @@ function activateXHRInterceptor(isVerbose: boolean = false, sessionID) {
       console.log(
         `ACTIVATING HIVE XHR INTERCEPTOR WITH PARAMTERS: METADATA_EXTENTION ${StreamingData.METADATA_EXTENTION} DATA_EXTENTION ${StreamingData.DATA_EXTENTION}`
       );
-    } catch (error) {}
+    } catch (error) { }
   }
   if (typeof window !== 'undefined') {
     window['HiveOriginalXMLHttpRequest'] = window['XMLHttpRequest'];
