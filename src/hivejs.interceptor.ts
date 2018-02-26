@@ -428,6 +428,7 @@ function activateXHRInterceptor(isVerbose: boolean = false, sessionID) {
     window['XMLHttpRequest'] = HiveXMLHttpRequest;
 
     // if there is a jQuery instance in the page, we completely exclude it from the XHR Interceptor
+    // ajaxSettings is supported from jquery 1.0, so no version check should be done
     if (window['jQuery'] && window['jQuery'].ajaxSettings)
       window['jQuery'].ajaxSettings.xhr = () => {
         try {
