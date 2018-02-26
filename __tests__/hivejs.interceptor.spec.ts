@@ -3,8 +3,11 @@ interface Window {
   activateXHRInterceptor: any;
   deactivateXHRInterceptor: any;
   HiveOriginalXMLHttpRequest: any;
+  jQuery: any;
 }
+
 declare var window: Window;
+declare var sinon: any;
 chai.should();
 
 function xhrGenAndSend(responseType: string = ''): Promise<any[]> {
@@ -134,5 +137,42 @@ describe('Generic Tests for HiveJS XHR Interceptor:', () => {
         }
       });
     });
+  });
+
+  it('change the xhr settings of jquery when activated and restores it when disactivated', () => {
+
+    const originalXHR = window.jQuery.ajaxSettings.xhr();
+
+    window.activateXHRInterceptor();
+
+    const hiveOriginalXHR = window.jQuery.ajaxSettings.xhr();
+    chai.expect(window.jQuery.ajaxSettings.xhr.toString()).to.contain('return new window[\'HiveOriginalXMLHttpRequest\']();');
+
+    window.deactivateXHRInterceptor();
+
+    const restoredOriginalXHR = window.jQuery.ajaxSettings.xhr();
+    chai.expect(window.jQuery.ajaxSettings.xhr.toString()).to.contain('return new window[\'XMLHttpRequest\']();');
+
+    chai.expect(originalXHR).to.be.an.instanceof(XMLHttpRequest)
+    chai.expect(hiveOriginalXHR).to.be.an.instanceof(XMLHttpRequest)
+    chai.expect(restoredOriginalXHR).to.be.an.instanceof(XMLHttpRequest)
+
+  });
+
+  it('it doesn\'t intercept jquery ajax requests', () => {
+    window.activateXHRInterceptor();
+    const sandbox = sinon.sandbox.create();
+    const openSpy = sandbox.spy(
+      XMLHttpRequest.prototype,
+      'open'
+    );
+    window.jQuery.ajax({
+      method: 'GET',
+      url: 'http://ams-live.hivestreaming.com/manifest.m3u8',
+    });
+
+    // tslint:disable-next-line:no-unused-expression
+    chai.expect(openSpy.notCalled).to.be.true;
+    sandbox.restore();
   });
 });

@@ -426,6 +426,14 @@ function activateXHRInterceptor(isVerbose: boolean = false, sessionID) {
     window['HiveOriginalXMLHttpRequest'] = window['XMLHttpRequest'];
     session = sessionID;
     window['XMLHttpRequest'] = HiveXMLHttpRequest;
+
+    // if there is a jQuery instance in the page, we completely exclude it from the XHR Interceptor
+    if (window['jQuery'] && window['jQuery'].ajaxSettings)
+      window['jQuery'].ajaxSettings.xhr = () => {
+        try {
+          return new window['HiveOriginalXMLHttpRequest']();
+        } catch (e) { }
+      };
   }
 }
 
@@ -433,18 +441,18 @@ function deactivateXHRInterceptor() {
   verbose = false;
   if (typeof window !== 'undefined' && window['HiveOriginalXMLHttpRequest']) {
     window['XMLHttpRequest'] = window['HiveOriginalXMLHttpRequest'];
+
+    // restoring original XMLHttpRequest
+    if (window['jQuery'] && window['jQuery'].ajaxSettings)
+    window['jQuery'].ajaxSettings.xhr = () => {
+      try {
+        return new window['XMLHttpRequest']();
+      } catch (e) { }
+    };
   }
 }
 
 if (typeof window !== 'undefined') {
   window['activateXHRInterceptor'] = activateXHRInterceptor;
   window['deactivateXHRInterceptor'] = deactivateXHRInterceptor;
-
-  // if there is a jQuery instance in the page, we completely exclude it from the XHR Interceptor
-  if (window["jQuery"] && window["jQuery"].ajaxSettings)
-    window["jQuery"].ajaxSettings.xhr = () => {
-      try {
-        return new window.HiveOriginalXMLHttpRequest();
-      } catch (e) { }
-    };
 }
