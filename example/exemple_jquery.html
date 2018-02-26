@@ -1,0 +1,70 @@
+<html>
+
+<head>
+    <script src="../dist/hivejs.interceptor.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.5/require.min.js"></script>
+    <script src="js/jquery-2.2.4.js"></script>
+</head>
+
+<body>
+
+
+    <script>
+        activateXHRInterceptor();
+
+        var objectsList = [];
+
+        $.ajax({
+            method: "POST",
+            url: "https://jsonplaceholder.typicode.com/users/1/posts",
+            beforeSend: (xhr) => {
+
+                // checking all the sages of the onreadystate change with the specific status of the XHR
+                xhr.onreadystatechange = (event) => {
+                    console.log('State Changed', event, event.currentTarget.readyState);
+                    objectsList.push({
+                        readyState: xhr.readyState,
+                        response: xhr.response,
+                        responseText: xhr.responseText,
+                        responseType: xhr.responseType,
+                        responseURL: xhr.responseURL,
+                        responseXML: xhr.responseXML,
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        timeout: xhr.timeout,
+                        upload: xhr.upload,
+                        withCredentials: xhr.withCredentials
+                    });
+                };
+
+                xhr.onloadstart = (event) => {
+                    console.log('EVENT LOADEDSTART', event);
+                };
+
+                xhr.onerror = (event) => {
+                    console.log('EVENT ERROR', event);
+                };
+
+                xhr.onload = (event) => {
+                    console.log('EVENT LOADED', event);
+                };
+
+                xhr.onloadend = (event) => {
+                    console.log('EVENT LOADEDEND', event);
+                };
+            },
+            data: {
+                "userId": Number.parseInt(Math.random() * 100),
+                "id": Number.parseInt(Math.random() * 100),
+                "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+                "body": "quia et suscipit suscipit recusandae consequuntur expedita et cum reprehenderit molestiae ut ut quas totam nostrum rerum est autem sunt rem eveniet architecto"
+            }
+
+        });
+
+    </script>
+
+
+</body>
+
+</html>
