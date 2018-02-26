@@ -105,7 +105,6 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
 
   // ---------------- Custom Properties --------------//
   parsedResponseHeaders = {};
-  headers: any;
   responseHeaders: any;
   mimetype: any;
   pass: any;
@@ -177,12 +176,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
 
   setRequestHeader(name, value) {
     if (this.innerXhr) {
-      console.log(`ADDING HEADER ${name} - ${value}`, this.innerXhr, this.url);
       this.innerXhr.setRequestHeader(name, value);
-    } else {
-      if (!this.headers) this.headers = [];
-      // console.info("HEADER " + name + " " + value);
-      this.headers.push({ key: name, value });
     }
   }
 
@@ -391,12 +385,6 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     this.readyState = this.OPENED;
 
     this.innerXhr.open(this.method, this.url, this.sync, this.user, this.pass);
-
-    if (this.headers) {
-      for (const header of this.headers) {
-        this.innerXhr.setRequestHeader(header.key, header.value);
-      }
-    }
   }
 
   private isVideoData(url: string): boolean {
@@ -451,4 +439,12 @@ function deactivateXHRInterceptor() {
 if (typeof window !== 'undefined') {
   window['activateXHRInterceptor'] = activateXHRInterceptor;
   window['deactivateXHRInterceptor'] = deactivateXHRInterceptor;
+
+  // if there is a jQuery instance in the page, we completely exclude it from the XHR Interceptor
+  if (window["jQuery"] && window["jQuery"].ajaxSettings)
+    window["jQuery"].ajaxSettings.xhr = () => {
+      try {
+        return new window.HiveOriginalXMLHttpRequest();
+      } catch (e) { }
+    };
 }
