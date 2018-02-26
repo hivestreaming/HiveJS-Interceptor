@@ -13,10 +13,11 @@
         activateXHRInterceptor();
 
         var objectsList = [];
+        var idNumber = Number.parseInt(Math.random() * 100);
 
         $.ajax({
             method: "POST",
-            url: "https://jsonplaceholder.typicode.com/users/1/posts",
+            url: "https://jsonplaceholder.typicode.com/users/"+ idNumber + "/posts",
             beforeSend: (xhr) => {
 
                 // checking all the sages of the onreadystate change with the specific status of the XHR
@@ -54,8 +55,8 @@
                 };
             },
             data: {
-                "userId": Number.parseInt(Math.random() * 100),
-                "id": Number.parseInt(Math.random() * 100),
+                "userId": idNumber,
+                "id": idNumber,
                 "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
                 "body": "quia et suscipit suscipit recusandae consequuntur expedita et cum reprehenderit molestiae ut ut quas totam nostrum rerum est autem sunt rem eveniet architecto"
             }
