@@ -140,32 +140,31 @@ describe('Generic Tests for HiveJS XHR Interceptor:', () => {
   });
 
   it('change the xhr settings of jquery when activated and restores it when disactivated', () => {
-
     const originalXHR = window.jQuery.ajaxSettings.xhr();
 
     window.activateXHRInterceptor();
 
     const hiveOriginalXHR = window.jQuery.ajaxSettings.xhr();
-    chai.expect(window.jQuery.ajaxSettings.xhr.toString()).to.contain('return new window[\'HiveOriginalXMLHttpRequest\']();');
+    chai
+      .expect(window.jQuery.ajaxSettings.xhr.toString())
+      .to.contain("return new window['HiveOriginalXMLHttpRequest']();");
 
     window.deactivateXHRInterceptor();
 
     const restoredOriginalXHR = window.jQuery.ajaxSettings.xhr();
-    chai.expect(window.jQuery.ajaxSettings.xhr.toString()).to.contain('return new window[\'XMLHttpRequest\']();');
+    chai
+      .expect(window.jQuery.ajaxSettings.xhr.toString())
+      .to.contain("return new window['XMLHttpRequest']();");
 
-    chai.expect(originalXHR).to.be.an.instanceof(XMLHttpRequest)
-    chai.expect(hiveOriginalXHR).to.be.an.instanceof(XMLHttpRequest)
-    chai.expect(restoredOriginalXHR).to.be.an.instanceof(XMLHttpRequest)
-
+    chai.expect(originalXHR).to.be.an.instanceof(XMLHttpRequest);
+    chai.expect(hiveOriginalXHR).to.be.an.instanceof(XMLHttpRequest);
+    chai.expect(restoredOriginalXHR).to.be.an.instanceof(XMLHttpRequest);
   });
 
-  it('it doesn\'t intercept jquery ajax requests', () => {
+  it("it doesn't intercept jquery ajax requests", () => {
     window.activateXHRInterceptor();
     const sandbox = sinon.sandbox.create();
-    const openSpy = sandbox.spy(
-      XMLHttpRequest.prototype,
-      'open'
-    );
+    const openSpy = sandbox.spy(XMLHttpRequest.prototype, 'open');
     window.jQuery.ajax({
       method: 'GET',
       url: 'http://ams-live.hivestreaming.com/manifest.m3u8',
