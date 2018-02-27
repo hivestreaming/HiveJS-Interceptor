@@ -28,6 +28,8 @@ const StreamingData = {
       : '.ts',
 };
 
+let session;
+
 class HiveXMLHttpRequestUpload implements XMLHttpRequestUpload {
   onabort: (ev: ProgressEvent) => any = null;
   onerror: (ev: Event) => any = null;
@@ -40,21 +42,21 @@ class HiveXMLHttpRequestUpload implements XMLHttpRequestUpload {
   // N.B: we don't support this at the moment
   addEventListener<
     K extends
-      | 'abort'
-      | 'error'
-      | 'load'
-      | 'loadend'
-      | 'loadstart'
-      | 'progress'
-      | 'timeout'
-  >(
-    type: K,
-    listener: (
-      this: XMLHttpRequestUpload,
-      ev: XMLHttpRequestEventTargetEventMap[K]
-    ) => {},
-    useCapture?: boolean
-  ): void;
+    | 'abort'
+    | 'error'
+    | 'load'
+    | 'loadend'
+    | 'loadstart'
+    | 'progress'
+    | 'timeout'
+    >(
+      type: K,
+      listener: (
+        this: XMLHttpRequestUpload,
+        ev: XMLHttpRequestEventTargetEventMap[K]
+      ) => {},
+      useCapture?: boolean
+    ): void;
   addEventListener(
     type: string,
     listener: EventListenerOrEventListenerObject,
@@ -79,6 +81,7 @@ class HiveXMLHttpRequestUpload implements XMLHttpRequestUpload {
 // in order to fix any compliance issue
 // tslint:disable-next-line:max-classes-per-file
 export class HiveXMLHttpRequest implements XMLHttpRequest {
+  static session: string;
   // ---------- XHR Constants ---------/
   readonly DONE: number = 4;
   readonly LOADING: number = 3;
@@ -102,7 +105,6 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
 
   // ---------------- Custom Properties --------------//
   parsedResponseHeaders = {};
-  headers: any;
   responseHeaders: any;
   mimetype: any;
   pass: any;
@@ -132,7 +134,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
 
   // --------------------------- XMLHttpRequest signature methods ----------------------------//
   // reference: https://xhr.spec.whatwg.org/#the-open()-method
-  open(method, url, sync = true, user = null, pass = null) {
+  open(method, url, sync = true, user?, pass?) {
     try {
       // here we decide if we should handle it with HiveRequestFactory or internal XHR
       const uri = new URI(url);
@@ -162,7 +164,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
       // parse once all the headers into a map
       if (this.responseHeaders) {
         const lines = this.responseHeaders.split('\n');
-        lines.forEach(function(line) {
+        lines.forEach(function (line) {
           const keyValue = line.split(':');
           this.parsedResponseHeaders[keyValue[0].trim()] = keyValue[1].trim();
         });
@@ -173,9 +175,9 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   }
 
   setRequestHeader(name, value) {
-    if (!this.headers) this.headers = [];
-    // console.info("HEADER " + name + " " + value);
-    this.headers.push({ key: name, value });
+    if (this.innerXhr) {
+      this.innerXhr.setRequestHeader(name, value);
+    }
   }
 
   send(body) {
@@ -242,14 +244,14 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
   }
 
   // -------------------- PLAYER IMPLEMENTED CALLBACKS --------------- //
-  onload(event: ProgressEvent) {}
-  onloadstart(event: ProgressEvent) {}
-  onloadend(event: ProgressEvent) {}
-  onerror(event: any) {}
-  onprogress(event: ProgressEvent) {}
-  ontimeout(event: ProgressEvent) {}
-  onabort(event: ProgressEvent) {}
-  onreadystatechange(event: Event) {}
+  onload(event: ProgressEvent) { }
+  onloadstart(event: ProgressEvent) { }
+  onloadend(event: ProgressEvent) { }
+  onerror(event: any) { }
+  onprogress(event: ProgressEvent) { }
+  ontimeout(event: ProgressEvent) { }
+  onabort(event: ProgressEvent) { }
+  onreadystatechange(event: Event) { }
 
   // -------------------- PRIVATE CUSTOM METHODS ---------------------- //
 
@@ -259,7 +261,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
       this.innerXhr = new window['HiveOriginalXMLHttpRequest']();
     } else {
       this.debugLog('USING HiveRequestFactory', this.innerXhr);
-      this.innerXhr = new HiveRequestFactory();
+      this.innerXhr = new HiveRequestFactory(session);
     }
 
     // Binding all known/typical the event handlers to the created XHR
@@ -383,12 +385,6 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     this.readyState = this.OPENED;
 
     this.innerXhr.open(this.method, this.url, this.sync, this.user, this.pass);
-
-    if (this.headers) {
-      this.headers.forEach(function(elem) {
-        this.innerXhr.setRequestHeader(elem.key, elem.value);
-      });
-    }
   }
 
   private isVideoData(url: string): boolean {
@@ -405,7 +401,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
     if (verbose && typeof console !== 'undefined')
       try {
         console.log(`[HiveJSInterceptor] ${message}`, data);
-      } catch (error) {}
+      } catch (error) { }
   }
 
   private debugVerboseLog(message: string, data) {
@@ -417,18 +413,28 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
 // We are using these methods to override and recover the XMLHttpRequest default implementation, in this way we will need to use it just when a
 // HiveU Web session is initialized
 
-function activateXHRInterceptor(isVerbose: boolean = false) {
+function activateXHRInterceptor(isVerbose: boolean = false, sessionID) {
   verbose = isVerbose;
   if (verbose && typeof console !== 'undefined') {
     try {
       console.log(
         `ACTIVATING HIVE XHR INTERCEPTOR WITH PARAMTERS: METADATA_EXTENTION ${StreamingData.METADATA_EXTENTION} DATA_EXTENTION ${StreamingData.DATA_EXTENTION}`
       );
-    } catch (error) {}
+    } catch (error) { }
   }
   if (typeof window !== 'undefined') {
     window['HiveOriginalXMLHttpRequest'] = window['XMLHttpRequest'];
+    session = sessionID;
     window['XMLHttpRequest'] = HiveXMLHttpRequest;
+
+    // if there is a jQuery instance in the page, we completely exclude it from the XHR Interceptor
+    // ajaxSettings is supported from jquery 1.0, so no version check should be done
+    if (window['jQuery'] && window['jQuery'].ajaxSettings)
+      window['jQuery'].ajaxSettings.xhr = () => {
+        try {
+          return new window['HiveOriginalXMLHttpRequest']();
+        } catch (e) { }
+      };
   }
 }
 
@@ -436,6 +442,14 @@ function deactivateXHRInterceptor() {
   verbose = false;
   if (typeof window !== 'undefined' && window['HiveOriginalXMLHttpRequest']) {
     window['XMLHttpRequest'] = window['HiveOriginalXMLHttpRequest'];
+
+    // restoring original XMLHttpRequest
+    if (window['jQuery'] && window['jQuery'].ajaxSettings)
+    window['jQuery'].ajaxSettings.xhr = () => {
+      try {
+        return new window['XMLHttpRequest']();
+      } catch (e) { }
+    };
   }
 }
 
