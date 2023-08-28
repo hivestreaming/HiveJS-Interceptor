@@ -31,7 +31,17 @@ module.exports = env => {
             'METADATA_EXTENTION': JSON.stringify(env.METADATA_EXTENTION),
             'DATA_EXTENTION': JSON.stringify(env.DATA_EXTENTION),
             'MORE_VERBOSE': env.MORE_VERBOSE
-        })
+        }),
+      // Uncomment this to uglyfy the library
+      // new UglifyJSPlugin({
+      //     uglifyOptions: {
+      //         mangle: false
+      //     },
+      //     output: {
+      //         comments: true,
+      //         beautify: true
+      //       },
+      // }),
     ],
 
     devServer: {
