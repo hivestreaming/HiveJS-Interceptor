@@ -1,0 +1,26 @@
+<html>
+    <head>
+        <script src="./index.js"></script>
+        <script> activateFetchInterceptor(true); </script>
+        <script src="./js/shaka/4.2.2/mux.js"></script>
+        <script src="./js/shaka/4.2.2/shaka-player.compiled.js"></script>
+        <!-- <script src="./js/shaka/4.2.2/shaka-player.compiled.debug.js"></script> -->
+        <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.5/require.min.js"></script>
+    </head>
+
+    <body>
+        <video id="player" controls muted autoplay></video>
+        
+        <script>
+
+            shaka.polyfill.installAll();
+            
+            var player = new shaka.Player(document.getElementById("player"));
+
+            player.load("https://streams.hivestreaming.com/wams/live/llama-drama-720p-140-350-850-1700-no-audio.ism/manifest(format=mpd-time-csf)")
+
+        </script>
+
+
+    </body>
+</html>

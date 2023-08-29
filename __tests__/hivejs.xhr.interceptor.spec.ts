@@ -1,4 +1,6 @@
-// tslint:disable-next-line:interface-name
+import { expect, should } from 'chai';
+import '../src/hivejs.xhr.interceptor';
+
 interface Window {
   activateXHRInterceptor: any;
   deactivateXHRInterceptor: any;
@@ -8,14 +10,14 @@ interface Window {
 
 declare var window: Window;
 declare var sinon: any;
-chai.should();
+should();
 
 function xhrGenAndSend(responseType: string = ''): Promise<any[]> {
   const statusesList = [];
 
   const allDonePromise = new Promise<any[]>((resolve, reject) => {
     const testXhr: any = new XMLHttpRequest();
-    testXhr.onreadystatechange = event => {
+    testXhr.onreadystatechange = (event) => {
       console.log('event', event);
 
       const xhrStatus = {
@@ -83,11 +85,11 @@ describe('Generic Tests for HiveJS XHR Interceptor:', () => {
   it('has the same statuses as a normal XHR when activated and going thorugh the all open-send workflow', () => {
     window.activateXHRInterceptor();
 
-    return xhrGenAndSend().then(interceptorStatuses => {
+    return xhrGenAndSend().then((interceptorStatuses) => {
       window.deactivateXHRInterceptor();
 
-      return xhrGenAndSend().then(normalStatuses => {
-        chai.expect(normalStatuses.length).equal(interceptorStatuses.length);
+      return xhrGenAndSend().then((normalStatuses) => {
+        expect(normalStatuses.length).equal(interceptorStatuses.length);
         // tslint:disable-next-line:forin
         for (const index in normalStatuses) {
           console.log('normal Statuses', JSON.stringify(normalStatuses[index]));
@@ -106,11 +108,11 @@ describe('Generic Tests for HiveJS XHR Interceptor:', () => {
   it('has the same statuses as a normal XHR when activated and going thorugh the all open-send workflow wiht arraybuffer type', () => {
     window.activateXHRInterceptor();
 
-    return xhrGenAndSend('arraybuffer').then(interceptorStatuses => {
+    return xhrGenAndSend('arraybuffer').then((interceptorStatuses) => {
       window.deactivateXHRInterceptor();
 
-      return xhrGenAndSend('arraybuffer').then(normalStatuses => {
-        chai.expect(normalStatuses.length).equal(interceptorStatuses.length);
+      return xhrGenAndSend('arraybuffer').then((normalStatuses) => {
+        expect(normalStatuses.length).equal(interceptorStatuses.length);
         // tslint:disable-next-line:forin
         for (const index in normalStatuses) {
           console.log('normal Statuses', JSON.stringify(normalStatuses[index]));
@@ -118,21 +120,21 @@ describe('Generic Tests for HiveJS XHR Interceptor:', () => {
             'Interceptor Statuses',
             JSON.stringify(interceptorStatuses[index])
           );
-          chai
-            .expect(normalStatuses[index])
-            .to.deep.equal(interceptorStatuses[index]);
+          expect(normalStatuses[index]).to.deep.equal(
+            interceptorStatuses[index]
+          );
 
           // for the array buffer we also check that the data in response is equal to both normal xhr and interceptor
           if (index === '3') {
-            chai
-              .expect(normalStatuses[index].response)
-              .to.be.an.instanceof(ArrayBuffer);
-            chai
-              .expect(interceptorStatuses[index].response)
-              .to.be.an.instanceof(ArrayBuffer);
-            chai
-              .expect(normalStatuses[index].response.length)
-              .to.be.equal(interceptorStatuses[index].response.length);
+            expect(normalStatuses[index].response).to.be.an.instanceof(
+              ArrayBuffer
+            );
+            expect(interceptorStatuses[index].response).to.be.an.instanceof(
+              ArrayBuffer
+            );
+            expect(normalStatuses[index].response.length).to.be.equal(
+              interceptorStatuses[index].response.length
+            );
           }
         }
       });
@@ -156,9 +158,9 @@ describe('Generic Tests for HiveJS XHR Interceptor:', () => {
       .expect(window.jQuery.ajaxSettings.xhr.toString())
       .to.contain("return new window['XMLHttpRequest']();");
 
-    chai.expect(originalXHR).to.be.an.instanceof(XMLHttpRequest);
-    chai.expect(hiveOriginalXHR).to.be.an.instanceof(XMLHttpRequest);
-    chai.expect(restoredOriginalXHR).to.be.an.instanceof(XMLHttpRequest);
+    expect(originalXHR).to.be.an.instanceof(XMLHttpRequest);
+    expect(hiveOriginalXHR).to.be.an.instanceof(XMLHttpRequest);
+    expect(restoredOriginalXHR).to.be.an.instanceof(XMLHttpRequest);
   });
 
   it("it doesn't intercept jquery ajax requests", () => {
@@ -171,7 +173,7 @@ describe('Generic Tests for HiveJS XHR Interceptor:', () => {
     });
 
     // tslint:disable-next-line:no-unused-expression
-    chai.expect(openSpy.notCalled).to.be.true;
+    expect(openSpy.notCalled).to.be.true;
     sandbox.restore();
   });
 });

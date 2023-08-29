@@ -48,7 +48,7 @@ class HiveXMLHttpRequestUpload implements XMLHttpRequestUpload {
       | 'loadend'
       | 'loadstart'
       | 'progress'
-      | 'timeout'
+      | 'timeout',
   >(
     type: K,
     listener: (
@@ -83,11 +83,11 @@ class HiveXMLHttpRequestUpload implements XMLHttpRequestUpload {
 export class HiveXMLHttpRequest implements XMLHttpRequest {
   static session: string;
   // ---------- XHR Constants ---------/
-  readonly DONE: number = 4;
-  readonly LOADING: number = 3;
-  readonly HEADERS_RECEIVED: number = 2;
-  readonly OPENED: number = 1;
-  readonly UNSENT: number = 0;
+  readonly DONE = 4;
+  readonly LOADING = 3;
+  readonly HEADERS_RECEIVED = 2;
+  readonly OPENED = 1;
+  readonly UNSENT = 0;
 
   // --------------- XHR Properties ---------------- //
   readyState: number;
@@ -164,7 +164,7 @@ export class HiveXMLHttpRequest implements XMLHttpRequest {
       // parse once all the headers into a map
       if (this.responseHeaders) {
         const lines = this.responseHeaders.split('\n');
-        lines.forEach(function(line) {
+        lines.forEach(function (line) {
           const keyValue = line.split(':');
           this.parsedResponseHeaders[keyValue[0].trim()] = keyValue[1].trim();
         });
@@ -425,6 +425,7 @@ function activateXHRInterceptor(isVerbose: boolean = false, sessionID) {
   if (typeof window !== 'undefined') {
     window['HiveOriginalXMLHttpRequest'] = window['XMLHttpRequest'];
     session = sessionID;
+    //@ts-ignore
     window['XMLHttpRequest'] = HiveXMLHttpRequest;
 
     // if there is a jQuery instance in the page, we completely exclude it from the XHR Interceptor
